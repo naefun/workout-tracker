@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gym_tracker_app/home/widgets/completed_exercise_card.dart';
 import 'package:gym_tracker_app/home/widgets/exercise_actions.dart';
+import 'package:gym_tracker_app/home/widgets/timer_count.dart';
 import 'package:gym_tracker_app/home/widgets/workout_actions.dart';
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
@@ -9,11 +11,16 @@ import 'package:gym_tracker_app/widgets/activity_pill.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 import 'package:gym_tracker_app/widgets/exercise_set_card.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  Widget build(BuildContext context) {
     var workoutProvider = ref.watch(currentWorkoutNotifierProvider);
     var workoutNotifier = ref.watch(currentWorkoutNotifierProvider.notifier);
 
@@ -28,15 +35,27 @@ class HomeScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: Row(
-              spacing: 14,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Workout",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Row(
+                  spacing: 14,
+                  children: [
+                    Text(
+                      "Workout",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    ActivityPill(
+                      active: workoutStatus,
+                    )
+                  ],
                 ),
-                ActivityPill(
-                  active: workoutStatus,
-                )
+                if (workoutProvider.isInProgress)
+                  TimerCount(
+                    startTime:
+                        workoutProvider.workoutStartDateTime ?? DateTime.now(),
+                    isSecondary: true,
+                    includeHours: true,
+                  ),
               ],
             ),
           ),
@@ -58,15 +77,21 @@ class HomeScreen extends ConsumerWidget {
               child: WorkoutActions(),
             ),
           if (workoutStatus && exerciseStatus) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-                child: Text(workoutProvider.currentExercise?.name ?? "",
-                    style: TextStyle(
-                        color: Color(0xff454545),
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold)),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(workoutProvider.currentExercise?.name ?? "",
+                      style: TextStyle(
+                          color: Color(0xff454545),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold)),
+                  TimerCount(
+                    startTime: workoutProvider.currentExercise?.startTime ??
+                        DateTime.now(),
+                  ),
+                ],
               ),
             ),
             SizedBox(
@@ -169,84 +194,14 @@ class HomeScreen extends ConsumerWidget {
                           var totalSets = exercises[index].sets.length;
                           var totalReps =
                               calculateTotalRepsFromSets(exercises[index].sets);
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 20, right: 20),
-                            child: (Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Color(0xffE8DEF8),
-                              ),
-                              padding: EdgeInsets.only(
-                                  left: 20, right: 20, top: 7, bottom: 7),
-                              child: Row(
-                                spacing: 6,
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Text(
-                                      overflow: TextOverflow.ellipsis,
-                                      exercises[index].name,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        spacing: 10,
-                                        children: [
-                                          Container(
-                                            padding: EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                color: Color(0xffD1BEEF)),
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  totalSets.toString(),
-                                                  style: TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                                Text(exercises[index]
-                                                            .sets
-                                                            .length ==
-                                                        1
-                                                    ? "Set"
-                                                    : "Sets"),
-                                              ],
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                color: Color(0xffD1BEEF)),
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  totalReps.toString(),
-                                                  style: TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                                Text(totalReps == 1
-                                                    ? "Rep"
-                                                    : "Reps"),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )),
+                          String duration = calculateDuration(
+                              exercises[index].startTime,
+                              exercises[index].endTime);
+                          return CompletedExerciseCard(
+                            exerciseName: exercises[index].name,
+                            totalSets: totalSets,
+                            totalReps: totalReps,
+                            duration: duration,
                           );
                         }),
                   )
@@ -263,5 +218,15 @@ class HomeScreen extends ConsumerWidget {
       result += num.tryParse(set.reps) ?? 0;
     }
     return result;
+  }
+
+  String calculateDuration(DateTime startTime, DateTime? endTime) {
+    if (endTime == null) return "00:00";
+
+    String? durationMins = endTime.difference(startTime).inMinutes.toString();
+    String? durationSecs =
+        (endTime.difference(startTime).inSeconds % 60).toString();
+
+    return "${durationMins.padLeft(2, '0')}:${durationSecs.padLeft(2, '0')}";
   }
 }

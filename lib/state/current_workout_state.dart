@@ -80,7 +80,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   void resetState() => state = initialCurrentWorkoutStateData;
 
   Future<void> startWorkout() async {
-    _setState(isInProgress: true);
+    _setState(isInProgress: true, workoutStartDateTime: DateTime.now());
   }
 
   Future<void> endWorkout() async {
@@ -94,13 +94,14 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
 
   Future<void> startExercise(String name) async {
     String id = Uuid().v4();
-    _setState(currentExercise: Exercise(name, [], id));
+    _setState(currentExercise: Exercise(name, [], id, DateTime.now()));
   }
 
   Future<void> endExercise() async {
     if (state.currentExercise != null &&
         (state.currentExercise?.sets.length ?? 0) > 0) {
-      _setState(exercises: [...state.exercises, state.currentExercise!]);
+      final exercise = state.currentExercise!..setEndTime(DateTime.now());
+      _setState(exercises: [...state.exercises, exercise]);
     }
     _resetState(currentExercise: true);
   }
