@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/home/home_screen.dart';
-import 'package:gym_tracker_app/providers/workout_provider.dart';
 
 class MainBottomNavigation extends ConsumerStatefulWidget {
   const MainBottomNavigation({super.key});
@@ -16,10 +15,6 @@ class _MainBottomNavigationState extends ConsumerState<MainBottomNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    bool workoutStatus = ref.watch(workoutStatusProvider);
-    bool exerciseStatus = ref.watch(exerciseStatusProvider);
-    List<ExerciseSet> sets = ref.watch(setDataProvider);
-
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (value) => {
