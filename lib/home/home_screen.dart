@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/home/widgets/completed_exercise_card.dart';
 import 'package:gym_tracker_app/home/widgets/exercise_actions.dart';
+import 'package:gym_tracker_app/home/widgets/past_workout_card.dart';
 import 'package:gym_tracker_app/home/widgets/timer_count.dart';
 import 'package:gym_tracker_app/home/widgets/workout_actions.dart';
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
+import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:gym_tracker_app/widgets/activity_pill.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 import 'package:gym_tracker_app/widgets/exercise_set_card.dart';
@@ -29,6 +31,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     List<ExerciseSet> sets =
         workoutProvider.currentExercise?.sets.values.toList() ?? [];
     List<Exercise> exercises = workoutProvider.exercises.reversed.toList();
+    List<Workout> pastWorkouts =
+        ref.watch(pastWorkoutsNotifierProvider).workouts;
 
     return SafeArea(
       child: Column(
@@ -63,7 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(
             height: 31,
           ),
-          if (!workoutStatus)
+          if (!workoutStatus) ...[
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20),
               child: CardButton(
@@ -72,6 +76,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 label: "Start workout",
               ),
             ),
+            SizedBox(
+              height: 44,
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: Text("Past Workouts",
+                    style: TextStyle(
+                        color: Color(0xff8F8F8F),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: ListView.separated(
+                  padding: EdgeInsets.only(top: 20, bottom: 20),
+                  separatorBuilder: (context, index) => SizedBox(
+                    height: 10,
+                  ),
+                  shrinkWrap: true,
+                  itemCount: pastWorkouts.length,
+                  itemBuilder: (context, index) {
+                    return PastWorkoutCard(workout: pastWorkouts[index]);
+                  },
+                ),
+              ),
+            ),
+          ],
           if (workoutStatus && !exerciseStatus)
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20),
@@ -173,7 +208,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
-                child: Text("Current workout",
+                child: Text("Current Workout",
                     style: TextStyle(
                         color: Color(0xff8F8F8F),
                         fontSize: 24,

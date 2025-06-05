@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:drift/drift.dart';
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
 import 'package:gym_tracker_app/state/database_state.dart';
@@ -83,9 +82,7 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
         final setWeight = row.readNullable<String>('set_weight');
         final setReps = row.readNullable<String>('set_reps');
 
-        // if workouts does not contain key
-        // create new workout
-        // add workout to workouts
+        // add workout
         if (workoutId != null) {
           if (!workouts.containsKey(workoutId)) {
             workouts[workoutId] =
@@ -95,9 +92,7 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
           continue;
         }
 
-        // if workouts[key] exercises does not contain exercise key
-        // create new exercise
-        // add exercise to workouts[key] exercises
+        // add exercise
         if (exerciseId != null &&
             exerciseName != null &&
             exerciseStart != null &&
@@ -118,6 +113,7 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
           continue;
         }
 
+        // add set
         if (setId != null && setWeight != null && setReps != null) {
           if (!workouts[workoutId]!
               .exercises[exerciseId]!
@@ -130,17 +126,6 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
         } else {
           continue;
         }
-      }
-      for (var workout in workouts.values) {
-        log('--------------------------------');
-        log('workout: ${workout.id} ${workout.startTime} ${workout.endTime}');
-        for (var exercise in workout.exercises.values) {
-          log('exercise: ${exercise.id} ${exercise.name} ${exercise.startTime} ${exercise.endTime}');
-          for (var set in exercise.sets.values) {
-            log('set: ${set.id} ${set.reps} ${set.weight}');
-          }
-        }
-        log('--------------------------------');
       }
       _setState(workouts: workouts.values.toList());
     } catch (e) {

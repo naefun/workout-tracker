@@ -1,12 +1,10 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/material.dart';
 import 'package:gym_tracker_app/data/local_database.dart';
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
 import 'package:gym_tracker_app/state/database_state.dart';
 import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:uuid/uuid.dart';
 
 part 'current_workout_state.g.dart';
 
@@ -108,9 +106,15 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
 
     DateTime endTime = DateTime.now();
 
-    await (database.update(database.databaseWorkouts)
-          ..where((val) => val.id.equals(state.workoutId!)))
-        .write(DatabaseWorkoutsCompanion(endTime: Value(endTime)));
+    if (state.exercises.isNotEmpty) {
+      await (database.update(database.databaseWorkouts)
+            ..where((val) => val.id.equals(state.workoutId!)))
+          .write(DatabaseWorkoutsCompanion(endTime: Value(endTime)));
+    } else {
+      await (database.delete(database.databaseWorkouts)
+            ..where((val) => val.id.equals(state.workoutId!)))
+          .go();
+    }
 
     resetState();
 
@@ -148,11 +152,14 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
         (state.currentExercise?.sets.length ?? 0) > 0) {
       final exercise = state.currentExercise!..setEndTime(endTime);
       _setState(exercises: [...state.exercises, exercise]);
+      await (database.update(database.databaseExercises)
+            ..where((val) => val.id.equals(state.currentExercise!.id)))
+          .write(DatabaseExercisesCompanion(endTime: Value(endTime)));
+    } else {
+      await (database.delete(database.databaseExercises)
+            ..where((val) => val.id.equals(state.currentExercise!.id)))
+          .go();
     }
-
-    await (database.update(database.databaseExercises)
-          ..where((val) => val.id.equals(state.currentExercise!.id)))
-        .write(DatabaseExercisesCompanion(endTime: Value(endTime)));
 
     _resetState(currentExercise: true);
   }
