@@ -136,13 +136,11 @@ class _ExerciseActionsState extends ConsumerState<ExerciseActions> {
 
       var parsedWeight = num.tryParse(weight);
       var parsedReps = num.tryParse(reps);
-      var id = Uuid().v4();
 
       if (parsedWeight != null && parsedReps != null) {
         ref
             .read(currentWorkoutNotifierProvider.notifier)
-            .addSetToCurrentExercise(ExerciseSet(
-                parsedWeight.toString(), parsedReps.toString(), id));
+            .addSetToCurrentExercise(weight, reps);
 
         // Unfocus the text fields first
         FocusScope.of(context).unfocus();

@@ -1,12 +1,17 @@
+import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
+import 'package:gym_tracker_app/data/local_database.dart';
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
+import 'package:gym_tracker_app/state/database_state.dart';
+import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'current_workout_state.g.dart';
 
 typedef CurrentWorkoutStateData = ({
-  String? workoutId,
+  int? workoutId,
   DateTime? workoutStartDateTime,
   DateTime? workoutEndDateTime,
   bool isInProgress,
@@ -29,7 +34,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   CurrentWorkoutStateData build() => initialCurrentWorkoutStateData;
 
   void _setState({
-    String? workoutId,
+    int? workoutId,
     DateTime? workoutStartDateTime,
     DateTime? workoutEndDateTime,
     bool? isInProgress,
@@ -80,12 +85,38 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   void resetState() => state = initialCurrentWorkoutStateData;
 
   Future<void> startWorkout() async {
-    _setState(isInProgress: true, workoutStartDateTime: DateTime.now());
+    var database = ref.read(databaseNotifierProvider).database;
+    if (database == null) {
+      return;
+    }
+
+    var startTime = DateTime.now();
+    var rowId = await database.into(database.databaseWorkouts).insert(
+        DatabaseWorkoutsCompanion.insert(
+            startTime: Value(startTime), createdAt: Value(startTime)));
+
+    _setState(
+        isInProgress: true, workoutStartDateTime: startTime, workoutId: rowId);
   }
 
   Future<void> endWorkout() async {
     // TODO: save workout data if it is not empty
+    var database = ref.read(databaseNotifierProvider).database;
+    if (database == null) {
+      return;
+    }
+
+    DateTime endTime = DateTime.now();
+
+    await (database.update(database.databaseWorkouts)
+          ..where((val) => val.id.equals(state.workoutId!)))
+        .write(DatabaseWorkoutsCompanion(endTime: Value(endTime)));
+
     resetState();
+
+    ref
+        .read(pastWorkoutsNotifierProvider.notifier)
+        .getWorkoutsFromLocalStorage();
   }
 
   Future<void> addExerciseToExerciseList(Exercise exercise) async {
@@ -93,24 +124,71 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   }
 
   Future<void> startExercise(String name) async {
-    String id = Uuid().v4();
-    _setState(currentExercise: Exercise(name, [], id, DateTime.now()));
+    var database = ref.read(databaseNotifierProvider).database;
+    if (database == null) {
+      return;
+    }
+    var startTime = DateTime.now();
+    var rowId = await database.into(database.databaseExercises).insert(
+        DatabaseExercisesCompanion.insert(
+            startTime: Value(startTime),
+            workoutId: Value(state.workoutId),
+            name: Value(name)));
+    _setState(currentExercise: Exercise(name, {}, rowId, startTime));
   }
 
   Future<void> endExercise() async {
+    var database = ref.read(databaseNotifierProvider).database;
+    if (database == null) {
+      return;
+    }
+
+    DateTime endTime = DateTime.now();
     if (state.currentExercise != null &&
         (state.currentExercise?.sets.length ?? 0) > 0) {
-      final exercise = state.currentExercise!..setEndTime(DateTime.now());
+      final exercise = state.currentExercise!..setEndTime(endTime);
       _setState(exercises: [...state.exercises, exercise]);
     }
+
+    await (database.update(database.databaseExercises)
+          ..where((val) => val.id.equals(state.currentExercise!.id)))
+        .write(DatabaseExercisesCompanion(endTime: Value(endTime)));
+
     _resetState(currentExercise: true);
   }
 
-  Future<void> addSetToCurrentExercise(ExerciseSet set) async {
-    _setState(currentExercise: state.currentExercise?.addSet(set));
+  Future<void> addSetToCurrentExercise(String reps, String weight) async {
+    var parsedReps = int.tryParse(reps);
+    var parsedWeight = double.tryParse(weight);
+    var exerciseId = state.currentExercise?.id;
+
+    if (parsedReps == null ||
+        parsedWeight == null ||
+        parsedReps <= 0 ||
+        parsedWeight <= 0 ||
+        exerciseId == null) {
+      return;
+    }
+
+    var database = ref.read(databaseNotifierProvider).database;
+    if (database == null) {
+      return;
+    }
+    var rowId = await database
+        .into(database.databaseExerciseSets)
+        .insert(DatabaseExerciseSetsCompanion.insert(
+          exerciseId: Value(exerciseId),
+          setNumber: Value(state.currentExercise?.sets.length ?? 0),
+          reps: Value(parsedReps),
+          weight: Value(parsedWeight),
+        ));
+
+    _setState(
+        currentExercise:
+            state.currentExercise?.addSet(ExerciseSet(weight, reps, rowId)));
   }
 
-  Future<void> removeSetFromCurrentExercise(String setId) async {
+  Future<void> removeSetFromCurrentExercise(int setId) async {
     _setState(currentExercise: state.currentExercise?.removeSet(setId));
   }
 }

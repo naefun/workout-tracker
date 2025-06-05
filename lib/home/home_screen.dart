@@ -26,7 +26,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     bool workoutStatus = workoutProvider.isInProgress;
     bool exerciseStatus = workoutProvider.currentExercise != null;
-    List<ExerciseSet> sets = workoutProvider.currentExercise?.sets ?? [];
+    List<ExerciseSet> sets =
+        workoutProvider.currentExercise?.sets.values.toList() ?? [];
     List<Exercise> exercises = workoutProvider.exercises.reversed.toList();
 
     return SafeArea(
@@ -192,8 +193,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
                           var totalSets = exercises[index].sets.length;
-                          var totalReps =
-                              calculateTotalRepsFromSets(exercises[index].sets);
+                          var totalReps = calculateTotalRepsFromSets(
+                              exercises[index].sets.values.toList());
                           String duration = calculateDuration(
                               exercises[index].startTime,
                               exercises[index].endTime);

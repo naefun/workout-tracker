@@ -2,15 +2,15 @@ import 'package:gym_tracker_app/models/exercise_set.dart';
 
 class Exercise {
   final String _name;
-  final List<ExerciseSet> _sets;
-  final String _id;
+  final Map<int, ExerciseSet> _sets;
+  final int _id;
   final DateTime _startTime;
   DateTime? _endTime;
 
   Exercise(
     String name,
-    List<ExerciseSet> sets,
-    String id,
+    Map<int, ExerciseSet> sets,
+    int id,
     DateTime startTime,
   )   : _name = name,
         _sets = sets,
@@ -18,17 +18,18 @@ class Exercise {
         _startTime = startTime;
 
   String get name => _name;
-  List<ExerciseSet> get sets => _sets;
-  String get id => _id;
+  Map<int, ExerciseSet> get sets => _sets;
+  int get id => _id;
   DateTime get startTime => _startTime;
   DateTime? get endTime => _endTime;
-  Exercise addSets(List<ExerciseSet> sets) {
+
+  Exercise addSets(Map<int, ExerciseSet> sets) {
     _sets.addAll(sets);
     return this;
   }
 
   Exercise addSet(ExerciseSet set) {
-    _sets.add(set);
+    _sets[set.id] = set;
     return this;
   }
 
@@ -37,8 +38,8 @@ class Exercise {
     return this;
   }
 
-  Exercise removeSet(String setId) {
-    _sets.removeWhere((set) => set.id == setId);
+  Exercise removeSet(int setId) {
+    _sets.removeWhere((id, set) => id == setId);
     return this;
   }
 }
