@@ -85,7 +85,7 @@ class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
     );
   }
 
-  startExercise(String exerciseName) {
+  void startExercise(String exerciseName) {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       // If the form is valid, display a snackbar. In the real world,
@@ -101,17 +101,17 @@ class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
       );
 
       ref
-          .read(currentWorkoutNotifierProvider.notifier)
+          .read(currentWorkoutProvider.notifier)
           .startExercise(exerciseName);
 
       Navigator.pop(context);
     }
   }
 
-  endWorkout() {
+  void endWorkout() {
     //TODO: save workout data
 
     // clear workout state
-    ref.read(currentWorkoutNotifierProvider.notifier).endWorkout();
+    ref.read(currentWorkoutProvider.notifier).endWorkout();
   }
 }

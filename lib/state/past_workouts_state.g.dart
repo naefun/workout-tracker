@@ -6,22 +6,55 @@ part of 'past_workouts_state.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pastWorkoutsNotifierHash() =>
-    r'4de6c40b36ddd51f87ceb9b6802ee5eee1f828e2';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [PastWorkoutsNotifier].
 @ProviderFor(PastWorkoutsNotifier)
-final pastWorkoutsNotifierProvider =
-    NotifierProvider<PastWorkoutsNotifier, PastWorkoutsStateData>.internal(
-  PastWorkoutsNotifier.new,
-  name: r'pastWorkoutsNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$pastWorkoutsNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final pastWorkoutsProvider = PastWorkoutsNotifierProvider._();
 
-typedef _$PastWorkoutsNotifier = Notifier<PastWorkoutsStateData>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class PastWorkoutsNotifierProvider
+    extends $NotifierProvider<PastWorkoutsNotifier, PastWorkoutsStateData> {
+  PastWorkoutsNotifierProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'pastWorkoutsProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$pastWorkoutsNotifierHash();
+
+  @$internal
+  @override
+  PastWorkoutsNotifier create() => PastWorkoutsNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PastWorkoutsStateData value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PastWorkoutsStateData>(value),
+    );
+  }
+}
+
+String _$pastWorkoutsNotifierHash() =>
+    r'f2f410ac2b27809b060244a5f9fd15943400f36e';
+
+abstract class _$PastWorkoutsNotifier extends $Notifier<PastWorkoutsStateData> {
+  PastWorkoutsStateData build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<PastWorkoutsStateData, PastWorkoutsStateData>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<PastWorkoutsStateData, PastWorkoutsStateData>,
+        PastWorkoutsStateData,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}

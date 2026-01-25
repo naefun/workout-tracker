@@ -6,22 +6,57 @@ part of 'current_workout_state.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentWorkoutNotifierHash() =>
-    r'c035a2bffb8c06852940647db8978ac280de8938';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [CurrentWorkoutNotifier].
 @ProviderFor(CurrentWorkoutNotifier)
-final currentWorkoutNotifierProvider =
-    NotifierProvider<CurrentWorkoutNotifier, CurrentWorkoutStateData>.internal(
-  CurrentWorkoutNotifier.new,
-  name: r'currentWorkoutNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$currentWorkoutNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final currentWorkoutProvider = CurrentWorkoutNotifierProvider._();
 
-typedef _$CurrentWorkoutNotifier = Notifier<CurrentWorkoutStateData>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class CurrentWorkoutNotifierProvider
+    extends $NotifierProvider<CurrentWorkoutNotifier, CurrentWorkoutStateData> {
+  CurrentWorkoutNotifierProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'currentWorkoutProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentWorkoutNotifierHash();
+
+  @$internal
+  @override
+  CurrentWorkoutNotifier create() => CurrentWorkoutNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CurrentWorkoutStateData value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CurrentWorkoutStateData>(value),
+    );
+  }
+}
+
+String _$currentWorkoutNotifierHash() =>
+    r'5bec77f9207c8e6f117fee13a060680874887e02';
+
+abstract class _$CurrentWorkoutNotifier
+    extends $Notifier<CurrentWorkoutStateData> {
+  CurrentWorkoutStateData build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<CurrentWorkoutStateData, CurrentWorkoutStateData>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<CurrentWorkoutStateData, CurrentWorkoutStateData>,
+        CurrentWorkoutStateData,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}

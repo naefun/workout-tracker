@@ -37,8 +37,8 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
 
   void resetState() => state = initialPastWorkoutsStateData;
 
-  getWorkoutsFromLocalStorage() async {
-    var database = ref.read(databaseNotifierProvider).database;
+  Future<void> getWorkoutsFromLocalStorage() async {
+    var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
     }

@@ -31,6 +31,20 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   @override
   CurrentWorkoutStateData build() => initialCurrentWorkoutStateData;
 
+  Exercise _cloneExerciseWithSets(
+      Exercise exercise, Map<int, ExerciseSet> sets) {
+    final updated = Exercise(
+      exercise.name,
+      sets,
+      exercise.id,
+      exercise.startTime,
+    );
+    if (exercise.endTime != null) {
+      updated.setEndTime(exercise.endTime!);
+    }
+    return updated;
+  }
+
   void _setState({
     int? workoutId,
     DateTime? workoutStartDateTime,
@@ -83,7 +97,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   void resetState() => state = initialCurrentWorkoutStateData;
 
   Future<void> startWorkout() async {
-    var database = ref.read(databaseNotifierProvider).database;
+    var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
     }
@@ -99,7 +113,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
 
   Future<void> endWorkout() async {
     // TODO: save workout data if it is not empty
-    var database = ref.read(databaseNotifierProvider).database;
+    var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
     }
@@ -118,9 +132,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
 
     resetState();
 
-    ref
-        .read(pastWorkoutsNotifierProvider.notifier)
-        .getWorkoutsFromLocalStorage();
+    ref.read(pastWorkoutsProvider.notifier).getWorkoutsFromLocalStorage();
   }
 
   Future<void> addExerciseToExerciseList(Exercise exercise) async {
@@ -128,7 +140,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   }
 
   Future<void> startExercise(String name) async {
-    var database = ref.read(databaseNotifierProvider).database;
+    var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
     }
@@ -142,7 +154,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   }
 
   Future<void> endExercise() async {
-    var database = ref.read(databaseNotifierProvider).database;
+    var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
     }
@@ -177,7 +189,7 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
       return;
     }
 
-    var database = ref.read(databaseNotifierProvider).database;
+    var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
     }
@@ -190,12 +202,30 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
           weight: Value(parsedWeight),
         ));
 
+    final currentExercise = state.currentExercise;
+    if (currentExercise == null) {
+      return;
+    }
+
+    final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets);
+    updatedSets[rowId] = ExerciseSet(weight, reps, rowId);
+
     _setState(
-        currentExercise:
-            state.currentExercise?.addSet(ExerciseSet(weight, reps, rowId)));
+      currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
+    );
   }
 
   Future<void> removeSetFromCurrentExercise(int setId) async {
-    _setState(currentExercise: state.currentExercise?.removeSet(setId));
+    final currentExercise = state.currentExercise;
+    if (currentExercise == null) {
+      return;
+    }
+
+    final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets)
+      ..remove(setId);
+
+    _setState(
+      currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
+    );
   }
 }

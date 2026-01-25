@@ -72,7 +72,7 @@ class CompletedExerciseCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (duration != null)
+                    if (duration.isNotEmpty)
                       Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(

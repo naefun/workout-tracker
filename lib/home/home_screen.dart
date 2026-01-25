@@ -23,8 +23,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    var workoutProvider = ref.watch(currentWorkoutNotifierProvider);
-    var workoutNotifier = ref.watch(currentWorkoutNotifierProvider.notifier);
+    var workoutProvider = ref.watch(currentWorkoutProvider);
+    var workoutNotifier = ref.watch(currentWorkoutProvider.notifier);
 
     bool workoutStatus = workoutProvider.isInProgress;
     bool exerciseStatus = workoutProvider.currentExercise != null;
@@ -32,7 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         workoutProvider.currentExercise?.sets.values.toList() ?? [];
     List<Exercise> exercises = workoutProvider.exercises.reversed.toList();
     List<Workout> pastWorkouts =
-        ref.watch(pastWorkoutsNotifierProvider).workouts;
+        ref.watch(pastWorkoutsProvider).workouts;
 
     return SafeArea(
       child: Column(

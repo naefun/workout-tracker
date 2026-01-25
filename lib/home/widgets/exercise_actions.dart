@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gym_tracker_app/models/exercise_set.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
 import 'package:gym_tracker_app/util/single_period_enforcer.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
-import 'package:uuid/uuid.dart';
 
 class ExerciseActions extends ConsumerStatefulWidget {
   const ExerciseActions({
@@ -128,7 +126,7 @@ class _ExerciseActionsState extends ConsumerState<ExerciseActions> {
     );
   }
 
-  addSet(String weight, String reps) {
+  void addSet(String weight, String reps) {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       // If the form is valid, display a snackbar. In the real world,
@@ -139,8 +137,8 @@ class _ExerciseActionsState extends ConsumerState<ExerciseActions> {
 
       if (parsedWeight != null && parsedReps != null) {
         ref
-            .read(currentWorkoutNotifierProvider.notifier)
-            .addSetToCurrentExercise(weight, reps);
+            .read(currentWorkoutProvider.notifier)
+            .addSetToCurrentExercise(reps, weight);
 
         // Unfocus the text fields first
         FocusScope.of(context).unfocus();
@@ -161,7 +159,7 @@ class _ExerciseActionsState extends ConsumerState<ExerciseActions> {
     }
   }
 
-  endExercise() {
-    ref.read(currentWorkoutNotifierProvider.notifier).endExercise();
+  void endExercise() {
+    ref.read(currentWorkoutProvider.notifier).endExercise();
   }
 }

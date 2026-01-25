@@ -15,10 +15,10 @@ class _AppState extends ConsumerState<App> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(databaseNotifierProvider.notifier).initDatabase();
+      ref.read(databaseProvider.notifier).initDatabase();
 
       ref
-          .read(pastWorkoutsNotifierProvider.notifier)
+          .read(pastWorkoutsProvider.notifier)
           .getWorkoutsFromLocalStorage();
     });
 
