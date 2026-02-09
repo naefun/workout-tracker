@@ -132,6 +132,21 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
       log('Error retrieving workouts: $e');
     }
   }
+
+  Future<void> deleteWorkout(int workoutId) async {
+    var database = ref.read(databaseProvider).database;
+    if (database == null) {
+      return;
+    }
+    var result = await (database.delete(database.databaseWorkouts)
+          ..where((val) => val.id.equals(workoutId)))
+        .go();
+    if (result > 0) {
+      final updatedWorkouts =
+          state.workouts.where((workout) => workout.id != workoutId).toList();
+      _setState(workouts: updatedWorkouts);
+    }
+  }
 }
 
 class Workout {

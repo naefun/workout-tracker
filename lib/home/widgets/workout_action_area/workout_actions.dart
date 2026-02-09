@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
+import 'package:gym_tracker_app/util/color_utils.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 
 class WorkoutActions extends ConsumerStatefulWidget {
@@ -15,6 +16,7 @@ class WorkoutActions extends ConsumerStatefulWidget {
 class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
   final _formKey = GlobalKey<FormState>();
 
+  final exerciseController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -24,12 +26,12 @@ class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
           child: CardButton(
             onTap: () => {
               showModalBottomSheet<void>(
+                  backgroundColor: Colors.white,
                   isScrollControlled: true,
                   useSafeArea: true,
                   showDragHandle: true,
                   context: context,
                   builder: (BuildContext context) {
-                    final exerciseController = TextEditingController();
                     return SingleChildScrollView(
                       padding: EdgeInsets.only(
                         bottom: MediaQuery.of(context).viewInsets.bottom + 50,
@@ -44,6 +46,17 @@ class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               TextFormField(
+                                cursorColor: Color.fromARGB(255, 38, 62, 35),
+                                decoration: const InputDecoration(
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Color(0xff232F3E)),
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Color(0xff232F3E), width: 2),
+                                  ),
+                                ),
                                 controller: exerciseController,
                                 autofocus: true,
                                 // The validator receives the text that the user has entered.
@@ -55,17 +68,39 @@ class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
                                 },
                               ),
                               ElevatedButton(
+                                style: ButtonStyle(
+                                  overlayColor: WidgetStatePropertyAll<Color?>(
+                                    darken(
+                                      primaryColour,
+                                      0.08,
+                                    ).withValues(alpha: 0.8),
+                                  ),
+                                  backgroundColor:
+                                      WidgetStatePropertyAll<Color>(
+                                          Color(0xffB6E3FF)),
+                                ),
                                 onPressed: () {
                                   startExercise(exerciseController.text);
                                 },
-                                child: const Text('Start exercise'),
+                                child: const Text(
+                                  'Start exercise',
+                                  style: TextStyle(
+                                    color: Color(0xff202730),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
                     );
-                  })
+                  }).whenComplete(() {
+                if (mounted) {
+                  setState(() {
+                    exerciseController.text = "";
+                  });
+                }
+              })
             },
             icon: Icons.add,
             label: "Add exercise",
@@ -88,29 +123,15 @@ class _WorkoutActionsState extends ConsumerState<WorkoutActions> {
   void startExercise(String exerciseName) {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
-      // If the form is valid, display a snackbar. In the real world,
-      // you'd often call a server or save the information in a database.
-
-      // Unfocus first, before any other operations
       FocusScope.of(context).unfocus();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Exercise started')),
-      );
-
-      ref
-          .read(currentWorkoutProvider.notifier)
-          .startExercise(exerciseName);
+      ref.read(currentWorkoutProvider.notifier).startExercise(exerciseName);
 
       Navigator.pop(context);
     }
   }
 
   void endWorkout() {
-    //TODO: save workout data
-
     // clear workout state
     ref.read(currentWorkoutProvider.notifier).endWorkout();
   }

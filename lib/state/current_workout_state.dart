@@ -112,7 +112,6 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   }
 
   Future<void> endWorkout() async {
-    // TODO: save workout data if it is not empty
     var database = ref.read(databaseProvider).database;
     if (database == null) {
       return;
@@ -183,8 +182,8 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
 
     if (parsedReps == null ||
         parsedWeight == null ||
-        parsedReps <= 0 ||
-        parsedWeight <= 0 ||
+        parsedReps < 0 ||
+        parsedWeight < 0 ||
         exerciseId == null) {
       return;
     }

@@ -42,7 +42,7 @@ final class CurrentWorkoutNotifierProvider
 }
 
 String _$currentWorkoutNotifierHash() =>
-    r'5bec77f9207c8e6f117fee13a060680874887e02';
+    r'9f3b18ceace845c7685cdf2b5a28d27988574d9f';
 
 abstract class _$CurrentWorkoutNotifier
     extends $Notifier<CurrentWorkoutStateData> {

@@ -55,22 +55,26 @@ class _TimerCountState extends ConsumerState<TimerCount> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      spacing: 8,
-      children: [
-        Icon(
-          Icons.timer,
-          color: widget.isSecondary ? Color(0xffC0C0C0) : Color(0xff454545),
-        ),
-        Text(
-          _formatDuration(_elapsed),
-          style: GoogleFonts.kodeMono(
-            color: widget.isSecondary ? Color(0xffC0C0C0) : Color(0xff454545),
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+    return Container(
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          color: Color.from(alpha: 0.04, red: 1, green: 1, blue: 1)),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 1),
+      child: Row(
+        spacing: 8,
+        children: [
+          Text(
+            _formatDuration(_elapsed),
+            style: GoogleFonts.kodeMono(
+              color: widget.isSecondary
+                  ? Color.fromRGBO(192, 192, 192, .5)
+                  : Color.fromARGB(255, 255, 255, 255),
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

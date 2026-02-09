@@ -17,9 +17,7 @@ class _AppState extends ConsumerState<App> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(databaseProvider.notifier).initDatabase();
 
-      ref
-          .read(pastWorkoutsProvider.notifier)
-          .getWorkoutsFromLocalStorage();
+      ref.read(pastWorkoutsProvider.notifier).getWorkoutsFromLocalStorage();
     });
 
     super.initState();
@@ -30,7 +28,6 @@ class _AppState extends ConsumerState<App> {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
       home: const MainBottomNavigation(),
