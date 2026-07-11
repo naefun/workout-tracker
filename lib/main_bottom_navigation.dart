@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gym_tracker_app/home/home_screen_v2.dart';
+import 'package:gym_tracker_app/screens/home/home_screen_v2.dart';
+import 'package:gym_tracker_app/screens/profile/profile_screen.dart';
 
 class MainBottomNavigation extends ConsumerStatefulWidget {
   const MainBottomNavigation({super.key});
@@ -52,18 +53,12 @@ class _MainBottomNavigationState extends ConsumerState<MainBottomNavigation> {
             label: 'Notifications',
           ),
           NavigationDestination(
-            selectedIcon: Badge(
-              label: Text('2'),
-              child: Icon(Icons.messenger_sharp),
+            selectedIcon: Icon(Icons.person),
+            icon: Icon(
+              Icons.person_outline,
+              color: Color(0xffB6E3FF),
             ),
-            icon: Badge(
-              label: Text('2'),
-              child: Icon(
-                Icons.messenger_outline,
-                color: Color(0xffB6E3FF),
-              ),
-            ),
-            label: 'Messages',
+            label: 'Profile',
           ),
         ],
       ),
@@ -72,7 +67,7 @@ class _MainBottomNavigationState extends ConsumerState<MainBottomNavigation> {
         child: <Widget>[
           const HomeScreenV2(),
           const Text("Page 2"),
-          const Text("Page 3"),
+          const ProfileScreen(),
         ][_currentPageIndex],
       ),
     );

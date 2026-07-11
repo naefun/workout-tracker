@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gym_tracker_app/home/widgets/home_screen/current_workout_area.dart';
-import 'package:gym_tracker_app/home/widgets/home_screen/previous_workouts_area.dart';
-import 'package:gym_tracker_app/home/widgets/timer_count.dart';
-import 'package:gym_tracker_app/home/widgets/workout_action_area/workout_action_area.dart';
-import 'package:gym_tracker_app/models/exercise_set.dart';
+import 'package:gym_tracker_app/screens/home/widgets/home_screen/current_workout_area.dart';
+import 'package:gym_tracker_app/screens/home/widgets/home_screen/previous_workouts_area.dart';
+import 'package:gym_tracker_app/screens/home/widgets/timer_count.dart';
+import 'package:gym_tracker_app/screens/home/widgets/workout_action_area/workout_action_area.dart';
 import 'package:gym_tracker_app/state/current_tab_state.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
+import 'package:gym_tracker_app/state/user_authentication_state.dart';
 import 'package:gym_tracker_app/util/color_utils.dart';
 import 'package:gym_tracker_app/widgets/activity_pill.dart';
 
@@ -24,6 +24,7 @@ class _HomeScreenState extends ConsumerState<HomeScreenV2> {
     final currentTabNotifier = ref.read(currentTabProvider.notifier);
     var workoutProvider = ref.watch(currentWorkoutProvider);
     bool workoutInProgress = workoutProvider.isInProgress;
+    final user = ref.watch(userAuthenticationProvider);
 
     return SafeArea(
       child: Stack(children: [
@@ -36,16 +37,18 @@ class _HomeScreenState extends ConsumerState<HomeScreenV2> {
                 children: [
                   Row(
                     children: [
-                      Text('Good afternoon',
+                      Text(
+                          '$greeting${(user.firstName ?? '').isEmpty ? "!" : ""}',
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.normal)),
-                      Text(' Nathan!',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold)),
+                      if ((user.firstName ?? '').isNotEmpty)
+                        Text(' ${user.firstName}!',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold)),
                     ],
                   ),
                   IconButton(
@@ -155,22 +158,15 @@ class _HomeScreenState extends ConsumerState<HomeScreenV2> {
     );
   }
 
-  num calculateTotalRepsFromSets(List<ExerciseSet> sets) {
-    num result = 0;
-    for (var set in sets) {
-      result += num.tryParse(set.reps) ?? 0;
+  String get greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good morning';
+    } else if (hour < 17) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
     }
-    return result;
-  }
-
-  String calculateDuration(DateTime startTime, DateTime? endTime) {
-    if (endTime == null) return "00:00";
-
-    String? durationMins = endTime.difference(startTime).inMinutes.toString();
-    String? durationSecs =
-        (endTime.difference(startTime).inSeconds % 60).toString();
-
-    return "${durationMins.padLeft(2, '0')}:${durationSecs.padLeft(2, '0')}";
   }
 }
 

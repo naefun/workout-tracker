@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gym_tracker_app/home/widgets/stat_pair.dart';
-import 'package:gym_tracker_app/home/widgets/timer_count.dart';
+import 'package:gym_tracker_app/screens/home/widgets/stat_pair.dart';
+import 'package:gym_tracker_app/screens/home/widgets/timer_count.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
 
 class CurrentWorkoutArea extends ConsumerStatefulWidget {

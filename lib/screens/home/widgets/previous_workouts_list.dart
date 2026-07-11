@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gym_tracker_app/home/widgets/past_workout_card.dart';
+import 'package:gym_tracker_app/screens/home/widgets/past_workout_card.dart';
 import 'package:gym_tracker_app/state/past_workouts_state.dart';
 
 class PreviousWorkoutsList extends StatelessWidget {

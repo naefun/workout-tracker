@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gym_tracker_app/home/widgets/workout_action_area/exercise_actions.dart';
-import 'package:gym_tracker_app/home/widgets/workout_action_area/workout_actions.dart';
+import 'package:gym_tracker_app/screens/home/widgets/workout_action_area/exercise_actions.dart';
+import 'package:gym_tracker_app/screens/home/widgets/workout_action_area/workout_actions.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 
