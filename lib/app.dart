@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/main_bottom_navigation.dart';
 import 'package:gym_tracker_app/state/database_state.dart';
 import 'package:gym_tracker_app/state/past_workouts_state.dart';
+import 'package:gym_tracker_app/widgets/authentication_controller.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -16,7 +17,6 @@ class _AppState extends ConsumerState<App> {
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(databaseProvider.notifier).initDatabase();
-
       ref.read(pastWorkoutsProvider.notifier).getWorkoutsFromLocalStorage();
     });
 
@@ -30,7 +30,9 @@ class _AppState extends ConsumerState<App> {
       theme: ThemeData(
         useMaterial3: true,
       ),
-      home: const MainBottomNavigation(),
+      home: AuthenticatorController(
+        child: MainBottomNavigation(),
+      ),
     );
   }
 }
