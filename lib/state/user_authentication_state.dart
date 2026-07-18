@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:developer';
 
+import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'user_authentication_state.g.dart';
@@ -42,16 +45,19 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
     );
   }
 
-  void _resetState({
-    bool isSignedIn = false,
-    String? firstName,
-  }) {
-    state = (
-      isSignedIn: isSignedIn == true
-          ? initialUserAuthenticationStateData.isSignedIn
-          : state.isSignedIn,
-      firstName: firstName ?? initialUserAuthenticationStateData.firstName,
-    );
+  Future<void> restoreSession() async {
+    final user = _supabase.client.auth.currentUser;
+    if (user != null) {
+      final fullName = (user.userMetadata?['full_name'] ??
+          user.userMetadata?['name']) as String?;
+      _setState(
+        isSignedIn: AuthStatus.signedIn,
+        firstName: fullName?.split(' ').first,
+      );
+      return;
+    }
+
+    await signInWithGoogle(silentOnly: true);
   }
 
   Future<void> signInWithGoogle({bool silentOnly = false}) async {
@@ -100,6 +106,75 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       log('Failed to authenticate with Supabase using Google credentials.');
       _setState(isSignedIn: AuthStatus.signedOut);
       return;
+    }
+  }
+
+  Future<void> signInWithApple() async {
+    try {
+      final rawNonce = _supabase.client.auth.generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+      final idToken = credential.identityToken;
+
+      if (idToken == null) {
+        throw const AuthException(
+          'Could not find an ID token in the Apple credential.',
+        );
+      }
+
+      final response = await _supabase.client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+
+      if (response.session == null || response.user == null) {
+        log('Failed to authenticate with Supabase using Apple credentials.');
+        _setState(isSignedIn: AuthStatus.signedOut);
+        return;
+      }
+
+      final givenName = credential.givenName?.trim();
+      final familyName = credential.familyName?.trim();
+      final fullName = [givenName, familyName]
+          .whereType<String>()
+          .where((name) => name.isNotEmpty)
+          .join(' ');
+
+      if (fullName.isNotEmpty) {
+        await _supabase.client.auth.updateUser(
+          UserAttributes(
+            data: {
+              'full_name': fullName,
+              if (givenName?.isNotEmpty ?? false) 'given_name': givenName,
+              if (familyName?.isNotEmpty ?? false) 'family_name': familyName,
+            },
+          ),
+        );
+      }
+
+      log('Successfully signed in with Apple and authenticated with Supabase.');
+      _setState(
+        isSignedIn: AuthStatus.signedIn,
+        firstName: givenName ??
+            (response.user?.userMetadata?['full_name'] as String?)
+                ?.split(' ')
+                .first,
+      );
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code != AuthorizationErrorCode.canceled) {
+        log('Apple sign in failed: $error');
+      }
+      _setState(isSignedIn: AuthStatus.signedOut);
+    } catch (error) {
+      log('Apple sign in failed: $error');
+      _setState(isSignedIn: AuthStatus.signedOut);
     }
   }
 

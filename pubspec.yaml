@@ -43,6 +43,8 @@ dependencies:
   drift_flutter: ^0.2.4
   path_provider: ^2.1.5
   google_sign_in: ^7.2.0
+  sign_in_with_apple: ^7.0.1
+  crypto: ^3.0.7
   supabase_flutter: ^2.12.0
   flutter_launcher_icons: ^0.14.4
 

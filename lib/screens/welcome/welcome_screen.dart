@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/state/user_authentication_state.dart';
@@ -22,14 +23,29 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(20.0),
-            child: CardButton(
-              onTap: () {
-                ref
-                    .read(userAuthenticationProvider.notifier)
-                    .signInWithGoogle();
-              },
-              label: 'Sign In With Google',
-              icon: Icons.login_rounded,
+            child: Column(
+              spacing: 12,
+              children: [
+                CardButton(
+                  onTap: () {
+                    ref
+                        .read(userAuthenticationProvider.notifier)
+                        .signInWithGoogle();
+                  },
+                  label: 'Sign In With Google',
+                  icon: Icons.login_rounded,
+                ),
+                if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS)
+                  CardButton(
+                    onTap: () {
+                      ref
+                          .read(userAuthenticationProvider.notifier)
+                          .signInWithApple();
+                    },
+                    label: 'Sign In With Apple',
+                    icon: Icons.apple,
+                  ),
+              ],
             ),
           )
         ],
