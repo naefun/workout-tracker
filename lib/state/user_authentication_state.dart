@@ -1,6 +1,10 @@
 import 'dart:developer';
 
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gym_tracker_app/state/current_tab_state.dart';
+import 'package:gym_tracker_app/state/current_workout_state.dart';
+import 'package:gym_tracker_app/state/database_state.dart';
+import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -42,15 +46,13 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
     );
   }
 
-  void _resetState({
-    bool isSignedIn = false,
-    String? firstName,
-  }) {
+  void _resetSignedOutState() {
+    ref.read(currentWorkoutProvider.notifier).resetState();
+    ref.read(pastWorkoutsProvider.notifier).resetState();
+    ref.read(currentTabProvider.notifier).resetState();
     state = (
-      isSignedIn: isSignedIn == true
-          ? initialUserAuthenticationStateData.isSignedIn
-          : state.isSignedIn,
-      firstName: firstName ?? initialUserAuthenticationStateData.firstName,
+      isSignedIn: AuthStatus.signedOut,
+      firstName: initialUserAuthenticationStateData.firstName,
     );
   }
 
@@ -104,9 +106,53 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _supabase.client.auth.signOut();
-    _setState(isSignedIn: AuthStatus.signedOut);
+    try {
+      await _googleSignIn.signOut();
+    } finally {
+      try {
+        await _supabase.client.auth.signOut();
+      } finally {
+        _resetSignedOutState();
+      }
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    final response = await _supabase.client.functions.invoke('delete-account');
+    final responseData = response.data;
+    final deletionConfirmed = response.status == 200 &&
+        responseData is Map<String, dynamic> &&
+        responseData['deleted'] == true;
+
+    if (!deletionConfirmed) {
+      throw StateError('Supabase did not confirm account deletion.');
+    }
+
+    try {
+      await ref.read(databaseProvider).database?.deleteAllUserData();
+    } catch (error, stackTrace) {
+      log(
+        'The Supabase account was deleted, but local data cleanup failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    try {
+      await _googleSignIn.disconnect();
+    } catch (error, stackTrace) {
+      log(
+        'The Google authorization could not be disconnected.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    try {
+      await _supabase.client.auth.signOut(scope: SignOutScope.local);
+    } finally {
+      _resetSignedOutState();
+    }
   }
 
   void resetState() => state = initialUserAuthenticationStateData;
