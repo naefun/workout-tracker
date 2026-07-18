@@ -23,9 +23,7 @@ class _AuthenticatorControllerState
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref
-          .read(userAuthenticationProvider.notifier)
-          .signInWithGoogle(silentOnly: true);
+      ref.read(userAuthenticationProvider.notifier).restoreSession();
 
       log('Silent auth check');
     });
