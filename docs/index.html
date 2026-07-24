@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy | Gym Tracker App</title>
+    <meta
+      name="description"
+      content="How Gym Tracker App handles account information, authentication data, and on-device workout records."
+    />
+    <link
+      rel="canonical"
+      href="https://naefun.github.io/workout-tracker/"
+    />
+    <link rel="icon" href="app-icon.png" />
+    <link rel="apple-touch-icon" href="app-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Gym Tracker App Privacy Policy" />
+    <meta
+      property="og:description"
+      content="Your workout records stay on your device."
+    />
+    <meta
+      property="og:url"
+      content="https://naefun.github.io/workout-tracker/"
+    />
+    <meta
+      property="og:image"
+      content="https://naefun.github.io/workout-tracker/og.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="Gym Tracker App Privacy Policy — Your workouts stay on your device."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <main>
+      <header class="site-header">
+        <a class="brand" href="#top" aria-label="Gym Tracker App home">
+          <img src="app-icon.png" alt="" width="38" height="38" />
+          <span>Gym Tracker App</span>
+        </a>
+        <a class="contact-link" href="mailto:nbyrne0101@gmail.com">Contact</a>
+      </header>
+
+      <div id="top" class="page-shell">
+        <section class="hero" aria-labelledby="page-title">
+          <p class="kicker">Privacy policy</p>
+          <h1 id="page-title">Your workouts are yours.</h1>
+          <p class="hero-copy">
+            Gym Tracker App keeps your workout records on your device. We use
+            Apple or Google with Supabase only to sign you in and maintain your
+            account.
+          </p>
+          <p class="updated">Last updated 24 July 2026</p>
+
+          <div class="summary-grid" aria-label="Privacy at a glance">
+            <div class="summary-card">
+              <span class="summary-eyebrow">Workout records</span>
+              <strong>On your device</strong>
+              <p>
+                Exercise names, times, sets, reps, and weights are not uploaded
+                by the app.
+              </p>
+            </div>
+            <div class="summary-card">
+              <span class="summary-eyebrow">Account access</span>
+              <strong>Apple or Google + Supabase</strong>
+              <p>
+                Your chosen sign-in identity is used to authenticate and
+                maintain your account.
+              </p>
+            </div>
+            <div class="summary-card">
+              <span class="summary-eyebrow">Advertising</span>
+              <strong>No tracking</strong>
+              <p>
+                We do not sell personal data, serve ads, or use your data for
+                cross-app tracking.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div class="content-layout">
+          <aside class="contents" aria-label="Policy contents">
+            <p>On this page</p>
+            <nav>
+              <a href="#overview"><span>01</span>Overview</a>
+              <a href="#data-we-handle"><span>02</span>Data we handle</a>
+              <a href="#workout-data"><span>03</span>Workout data</a>
+              <a href="#how-we-use-data"><span>04</span>How we use data</a>
+              <a href="#service-providers"><span>05</span>Service providers</a>
+              <a href="#retention"><span>06</span>Retention and deletion</a>
+              <a href="#your-choices"><span>07</span>Your choices and rights</a>
+              <a href="#security"><span>08</span>Security</a>
+              <a href="#children"><span>09</span>Children</a>
+              <a href="#international-transfers"
+                ><span>10</span>International transfers</a
+              >
+              <a href="#changes"><span>11</span>Changes to this policy</a>
+              <a href="#contact"><span>12</span>Contact</a>
+            </nav>
+          </aside>
+
+          <article class="policy">
+            <section id="overview">
+              <p class="section-number">01</p>
+              <h2>Overview</h2>
+              <p>
+                This Privacy Policy explains how Gym Tracker App (“the app”),
+                provided by Nathan Byrne (“we”, “us”, or “our”), handles
+                information when you use the app.
+              </p>
+              <p>
+                The app does not require you to upload workout information.
+                Account information is processed for sign-in, security, and
+                account administration. We do not sell personal information,
+                display advertising, or use personal information for cross-app
+                tracking.
+              </p>
+            </section>
+
+            <section id="data-we-handle">
+              <p class="section-number">02</p>
+              <h2>Data we handle</h2>
+
+              <h3>Google Sign-In</h3>
+              <p>
+                When you choose Google Sign-In, the app requests the
+                <strong>email</strong> and <strong>profile</strong> scopes. The
+                sign-in process can provide your name, email address, Google
+                account identifier, profile information, and authentication
+                tokens.
+              </p>
+
+              <h3>Sign in with Apple</h3>
+              <p>
+                When you choose Sign in with Apple, the app requests your name
+                and email address. Apple may provide a private relay email
+                address if you choose to hide your email. The sign-in process
+                also provides an Apple account identifier, identity token, and
+                authorization code.
+              </p>
+              <p>
+                The Apple authorization code is exchanged for a refresh token,
+                which is encrypted before being stored in Supabase so that your
+                Apple authorization can be revoked if you delete your account.
+              </p>
+
+              <h3>Supabase authentication</h3>
+              <p>
+                Supabase creates and stores an internal user ID and session
+                records so that you can remain signed in. Supabase also records
+                authentication events such as sign-in, token refresh, and
+                sign-out. Those records can include your user ID, IP address,
+                user-agent or device information, timestamp, action, and
+                sign-in provider.
+              </p>
+
+              <div class="callout">
+                <strong>Google Sign-In SDK disclosure</strong>
+                <p>
+                  The Google Sign-In SDK included in the iOS app declares that
+                  it may process name, email address, phone number, coarse
+                  location, user ID, device ID, other usage data, and other data
+                  types for app functionality and analytics. The app itself
+                  requests only email and profile access; it does not ask you
+                  to enter a phone number or grant device location permission.
+                </p>
+              </div>
+
+              <h3>What we do not add</h3>
+              <p>
+                The current version does not include advertising, independent
+                analytics, crash-reporting, or diagnostics SDKs. We do not
+                collect payment details, contacts, photos, microphone data,
+                precise location, or HealthKit data.
+              </p>
+            </section>
+
+            <section id="workout-data">
+              <p class="section-number">03</p>
+              <h2>Workout data stays on your device</h2>
+              <p>
+                Workout start and end times, exercise names, set counts, reps,
+                and weights are saved in a database within the app’s local
+                storage. The app does not upload this workout information to
+                Supabase, Apple, Google, or a server operated by us.
+              </p>
+              <p>
+                Your operating system may include app data in a device backup,
+                depending on the backup settings you control. Those backups are
+                handled by your device and backup provider, not by Gym Tracker
+                App.
+              </p>
+            </section>
+
+            <section id="how-we-use-data">
+              <p class="section-number">04</p>
+              <h2>How we use data</h2>
+              <ul>
+                <li>To authenticate you and maintain your signed-in session.</li>
+                <li>To show your first name within the app.</li>
+                <li>
+                  To revoke linked sign-in authorization when you delete your
+                  account.
+                </li>
+                <li>
+                  To prevent abuse, protect account security, and investigate
+                  authentication problems.
+                </li>
+                <li>
+                  To comply with applicable law and enforce our legal rights.
+                </li>
+              </ul>
+              <p>
+                Where applicable, we rely on performance of the service you
+                request, our legitimate interests in operating and securing the
+                app, consent where required, and compliance with legal
+                obligations.
+              </p>
+            </section>
+
+            <section id="service-providers">
+              <p class="section-number">05</p>
+              <h2>Service providers</h2>
+              <div class="provider-list">
+                <div>
+                  <h3>Apple</h3>
+                  <p>Provides identity authentication through Sign in with Apple.</p>
+                  <a
+                    href="https://www.apple.com/legal/privacy/"
+                    rel="noreferrer"
+                    target="_blank"
+                    >Apple Privacy Policy <span aria-hidden="true">↗</span></a
+                  >
+                </div>
+                <div>
+                  <h3>Google</h3>
+                  <p>Provides identity authentication through Google Sign-In.</p>
+                  <a
+                    href="https://policies.google.com/privacy"
+                    rel="noreferrer"
+                    target="_blank"
+                    >Google Privacy Policy <span aria-hidden="true">↗</span></a
+                  >
+                </div>
+                <div>
+                  <h3>Supabase</h3>
+                  <p>
+                    Provides account, session, token, and authentication
+                    infrastructure.
+                  </p>
+                  <a
+                    href="https://supabase.com/privacy"
+                    rel="noreferrer"
+                    target="_blank"
+                    >Supabase Privacy Policy <span aria-hidden="true">↗</span></a
+                  >
+                </div>
+              </div>
+              <p>
+                These providers process information on our behalf or as
+                independent controllers under their own terms. Where they
+                process information on our behalf, we require protections that
+                are at least equivalent to those described in this policy and
+                required by applicable law. We may also disclose information
+                where required by law, to protect rights or safety, or as part
+                of a business transfer. We do not sell or rent your personal
+                information.
+              </p>
+            </section>
+
+            <section id="retention">
+              <p class="section-number">06</p>
+              <h2>Retention and deletion</h2>
+              <p>
+                Workout information remains on your device until you delete
+                individual workouts, clear the app’s data, delete your account,
+                or uninstall the app, subject to any device backup you control.
+              </p>
+              <p>
+                Supabase account and authentication information is retained
+                while your account remains active and as reasonably necessary
+                for security, legal, and operational purposes. Authentication
+                log retention depends on the service configuration and plan.
+              </p>
+              <p>
+                You can delete your account from the Profile area of the app.
+                Account deletion removes your Supabase account and associated
+                authentication data, revokes or disconnects the linked sign-in
+                provider where supported, and deletes workout data held in the
+                app’s local database. Device backups that you control may retain
+                an older copy until the backup is replaced or deleted.
+              </p>
+              <p>
+                If account deletion does not complete, email
+                <a href="mailto:nbyrne0101@gmail.com"
+                  >nbyrne0101@gmail.com</a
+                >
+                from the address linked to your account. We may need to verify
+                your request.
+              </p>
+            </section>
+
+            <section id="your-choices">
+              <p class="section-number">07</p>
+              <h2>Your choices and rights</h2>
+              <p>
+                You can sign out or delete your account at any time from the
+                Profile area. You can delete saved workouts in the app and can
+                remove local data through your device settings or by
+                uninstalling the app.
+              </p>
+              <p>
+                Depending on where you live, you may have rights to access,
+                correct, delete, restrict, or object to processing of your
+                personal information, or to receive a portable copy. You may
+                also withdraw consent where processing relies on consent and
+                complain to your local data-protection authority.
+              </p>
+            </section>
+
+            <section id="security">
+              <p class="section-number">08</p>
+              <h2>Security</h2>
+              <p>
+                We use established authentication providers, encryption for
+                stored Apple revocation tokens, and reasonable administrative
+                and technical safeguards to protect account information. No
+                storage or transmission method is completely secure, so we
+                cannot guarantee absolute security.
+              </p>
+            </section>
+
+            <section id="children">
+              <p class="section-number">09</p>
+              <h2>Children</h2>
+              <p>
+                The app is not directed to children under 13, and we do not
+                knowingly collect personal information from children under 13.
+                If you believe a child has provided account information, please
+                contact us so we can investigate and delete it where required.
+              </p>
+            </section>
+
+            <section id="international-transfers">
+              <p class="section-number">10</p>
+              <h2>International transfers</h2>
+              <p>
+                Apple, Google, and Supabase may process information in countries
+                other than the country where you live. Where required, they and
+                we use appropriate safeguards for international transfers under
+                applicable data-protection law.
+              </p>
+            </section>
+
+            <section id="changes">
+              <p class="section-number">11</p>
+              <h2>Changes to this policy</h2>
+              <p>
+                We may update this policy when the app, our providers, or legal
+                requirements change. We will post the revised policy here and
+                update the “Last updated” date. Material changes may also be
+                communicated in the app where appropriate.
+              </p>
+            </section>
+
+            <section id="contact">
+              <p class="section-number">12</p>
+              <h2>Contact</h2>
+              <p>
+                For privacy questions or requests, contact:<br />
+                <strong>Nathan Byrne</strong><br />
+                <a href="mailto:nbyrne0101@gmail.com"
+                  >nbyrne0101@gmail.com</a
+                >
+              </p>
+            </section>
+          </article>
+        </div>
+      </div>
+
+      <footer>
+        <span>© 2026 Gym Tracker App</span>
+        <a href="#top">Back to top ↑</a>
+      </footer>
+    </main>
+  </body>
+</html>

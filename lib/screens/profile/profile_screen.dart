@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/state/user_authentication_state.dart';
+import 'package:gym_tracker_app/util/privacy_policy.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -14,6 +15,18 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isDeletingAccount = false;
+
+  Future<void> _openPrivacyPolicy() async {
+    final opened = await openPrivacyPolicy();
+
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open the privacy policy.'),
+        ),
+      );
+    }
+  }
 
   Future<void> _deleteAccount() async {
     final shouldDelete = await showDialog<bool>(
@@ -83,6 +96,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             spacing: 12,
             children: [
+              CardButton(
+                onTap: _openPrivacyPolicy,
+                label: 'Privacy Policy',
+                icon: Icons.privacy_tip_outlined,
+              ),
               CardButton(
                 onTap: _isDeletingAccount ? () {} : _deleteAccount,
                 label:

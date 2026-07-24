@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/state/user_authentication_state.dart';
 import 'package:gym_tracker_app/util/color_utils.dart';
+import 'package:gym_tracker_app/util/privacy_policy.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -14,6 +15,18 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   bool _isSigningIn = false;
+
+  Future<void> _openPrivacyPolicy() async {
+    final opened = await openPrivacyPolicy();
+
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open the privacy policy.'),
+        ),
+      );
+    }
+  }
 
   Future<void> _signIn(Future<void> Function() signIn) async {
     if (_isSigningIn) {
@@ -45,7 +58,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       spacing: 12,
                       children: [
@@ -71,7 +84,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           ),
                       ],
                     ),
-                  )
+                  ),
+                  TextButton(
+                    onPressed: _openPrivacyPolicy,
+                    child: Text(
+                      'Privacy Policy',
+                      style: TextStyle(color: primaryColour),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
       ),
