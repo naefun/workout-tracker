@@ -3,6 +3,10 @@ import 'dart:developer';
 
 import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gym_tracker_app/state/current_tab_state.dart';
+import 'package:gym_tracker_app/state/current_workout_state.dart';
+import 'package:gym_tracker_app/state/database_state.dart';
+import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,6 +17,11 @@ enum AuthStatus {
   unknown,
   signedIn,
   signedOut,
+}
+
+enum _IdentityProvider {
+  apple,
+  google,
 }
 
 typedef UserAuthenticationStateData = ({
@@ -43,6 +52,86 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       isSignedIn: isSignedIn ?? state.isSignedIn,
       firstName: firstName ?? state.firstName,
     );
+  }
+
+  void _resetSignedOutState() {
+    ref.read(currentWorkoutProvider.notifier).resetState();
+    ref.read(pastWorkoutsProvider.notifier).resetState();
+    ref.read(currentTabProvider.notifier).resetState();
+    state = (
+      isSignedIn: AuthStatus.signedOut,
+      firstName: initialUserAuthenticationStateData.firstName,
+    );
+  }
+
+  bool _hasIdentityProvider(_IdentityProvider provider) {
+    final user = _supabase.client.auth.currentUser;
+    final providers = user?.appMetadata['providers'];
+    final providerName = provider.name;
+
+    return user?.identities
+                ?.any((identity) => identity.provider == providerName) ==
+            true ||
+        user?.appMetadata['provider'] == providerName ||
+        providers is List && providers.contains(providerName);
+  }
+
+  Set<_IdentityProvider> _currentIdentityProviders() {
+    return _IdentityProvider.values.where(_hasIdentityProvider).toSet();
+  }
+
+  String _identityProviderName(_IdentityProvider provider) {
+    return switch (provider) {
+      _IdentityProvider.apple => 'Apple',
+      _IdentityProvider.google => 'Google',
+    };
+  }
+
+  void _logSuccessfulSignOut(Set<_IdentityProvider> providers) {
+    if (providers.isEmpty) {
+      log('Successfully signed out of the Supabase account.');
+      return;
+    }
+
+    for (final provider in providers) {
+      log(
+        'Successfully signed out of the '
+        '${_identityProviderName(provider)} account.',
+      );
+    }
+  }
+
+  void _logSuccessfulAccountDeletion(Set<_IdentityProvider> providers) {
+    if (providers.isEmpty) {
+      log('Successfully deleted the Supabase account data.');
+      return;
+    }
+
+    for (final provider in providers) {
+      log(
+        'Successfully deleted the '
+        '${_identityProviderName(provider)} account data.',
+      );
+    }
+  }
+
+  Future<void> _storeAppleDeletionCredential(
+    String authorizationCode,
+  ) async {
+    final response = await _supabase.client.functions.invoke(
+      'store-apple-token',
+      body: {'authorizationCode': authorizationCode},
+    );
+    final responseData = response.data;
+    final storageConfirmed = response.status == 200 &&
+        responseData is Map<String, dynamic> &&
+        responseData['stored'] == true;
+
+    if (!storageConfirmed) {
+      throw StateError(
+        'Supabase did not confirm Apple authorization storage.',
+      );
+    }
   }
 
   Future<void> restoreSession() async {
@@ -140,6 +229,8 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
         return;
       }
 
+      await _storeAppleDeletionCredential(credential.authorizationCode);
+
       final givenName = credential.givenName?.trim();
       final familyName = credential.familyName?.trim();
       final fullName = [givenName, familyName]
@@ -174,14 +265,103 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       _setState(isSignedIn: AuthStatus.signedOut);
     } catch (error) {
       log('Apple sign in failed: $error');
-      _setState(isSignedIn: AuthStatus.signedOut);
+      try {
+        await _supabase.client.auth.signOut(scope: SignOutScope.local);
+      } finally {
+        _resetSignedOutState();
+      }
     }
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _supabase.client.auth.signOut();
-    _setState(isSignedIn: AuthStatus.signedOut);
+    final identityProviders = _currentIdentityProviders();
+
+    try {
+      await _googleSignIn.signOut();
+    } finally {
+      try {
+        await _supabase.client.auth.signOut();
+        _logSuccessfulSignOut(identityProviders);
+      } finally {
+        _resetSignedOutState();
+      }
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    final identityProviders = _currentIdentityProviders();
+    final hasAppleIdentity =
+        identityProviders.contains(_IdentityProvider.apple);
+    final hasGoogleIdentity =
+        identityProviders.contains(_IdentityProvider.google);
+
+    if (hasAppleIdentity) {
+      await _deleteAppleAccount();
+    } else {
+      await _deleteSupabaseAccount(requireAppleRevocation: false);
+    }
+    _logSuccessfulAccountDeletion(identityProviders);
+
+    try {
+      await ref.read(databaseProvider).database?.deleteAllUserData();
+    } catch (error, stackTrace) {
+      log(
+        'The Supabase account was deleted, but local data cleanup failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    if (hasGoogleIdentity) {
+      await _deleteGoogleAccount();
+    }
+
+    try {
+      await _supabase.client.auth.signOut(scope: SignOutScope.local);
+      _logSuccessfulSignOut(identityProviders);
+    } finally {
+      _resetSignedOutState();
+    }
+  }
+
+  Future<void> _deleteAppleAccount() async {
+    await _deleteSupabaseAccount(requireAppleRevocation: true);
+  }
+
+  Future<void> _deleteSupabaseAccount({
+    required bool requireAppleRevocation,
+  }) async {
+    final response = await _supabase.client.functions.invoke(
+      'delete-account',
+    );
+    final responseData = response.data;
+    final deletionConfirmed = response.status == 200 &&
+        responseData is Map<String, dynamic> &&
+        responseData['deleted'] == true &&
+        (!requireAppleRevocation ||
+            responseData['appleAuthorizationRevoked'] == true);
+
+    if (!deletionConfirmed) {
+      final errorMessage =
+          responseData is Map<String, dynamic> ? responseData['error'] : null;
+      throw StateError(
+        errorMessage is String
+            ? errorMessage
+            : 'Supabase did not confirm account deletion.',
+      );
+    }
+  }
+
+  Future<void> _deleteGoogleAccount() async {
+    try {
+      await _googleSignIn.disconnect();
+    } catch (error, stackTrace) {
+      log(
+        'The Google authorization could not be disconnected.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   void resetState() => state = initialUserAuthenticationStateData;
