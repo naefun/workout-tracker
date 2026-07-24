@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/state/user_authentication_state.dart';
+import 'package:gym_tracker_app/util/color_utils.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -12,44 +13,68 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  bool _isSigningIn = false;
+
+  Future<void> _signIn(Future<void> Function() signIn) async {
+    if (_isSigningIn) {
+      return;
+    }
+
+    setState(() => _isSigningIn = true);
+
+    try {
+      await signIn();
+    } finally {
+      if (mounted) {
+        setState(() => _isSigningIn = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff202730),
+      backgroundColor: const Color(0xff202730),
       body: SafeArea(
-          child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              spacing: 12,
-              children: [
-                CardButton(
-                  onTap: () {
-                    ref
-                        .read(userAuthenticationProvider.notifier)
-                        .signInWithGoogle();
-                  },
-                  label: 'Sign In With Google',
-                  icon: Icons.login_rounded,
-                ),
-                if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS)
-                  CardButton(
-                    onTap: () {
-                      ref
-                          .read(userAuthenticationProvider.notifier)
-                          .signInWithApple();
-                    },
-                    label: 'Sign In With Apple',
-                    icon: Icons.apple,
-                  ),
-              ],
-            ),
-          )
-        ],
-      )),
+        child: _isSigningIn
+            ? Center(
+                child: CircularProgressIndicator(color: primaryColour),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      spacing: 12,
+                      children: [
+                        CardButton(
+                          onTap: () => _signIn(
+                            ref
+                                .read(userAuthenticationProvider.notifier)
+                                .signInWithGoogle,
+                          ),
+                          label: 'Sign In With Google',
+                          icon: Icons.g_mobiledata_rounded,
+                        ),
+                        if (!kIsWeb &&
+                            defaultTargetPlatform == TargetPlatform.iOS)
+                          CardButton(
+                            onTap: () => _signIn(
+                              ref
+                                  .read(userAuthenticationProvider.notifier)
+                                  .signInWithApple,
+                            ),
+                            label: 'Sign In With Apple',
+                            icon: Icons.apple,
+                          ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+      ),
     );
   }
 }
