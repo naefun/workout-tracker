@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,6 +39,24 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
     try {
       await signIn();
+    } catch (error, stackTrace) {
+      log(
+        'Login was unsuccessful.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Login was unsuccessful. Check your connection and try again.',
+              ),
+            ),
+          );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSigningIn = false);
