@@ -18,6 +18,10 @@ workflows:
       - name: Install pods
         script: |
           find . -name "Podfile" -maxdepth 2 -execdir pod install \;
+      - name: Flutter analyze
+        script: flutter analyze
+      - name: Flutter unit tests
+        script: flutter test
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
       - name: Flutter build ipa
