@@ -6,6 +6,8 @@ workflows:
     integrations:
       app_store_connect: Workouttracker-codemagic
     environment:
+      groups:
+        - ios_signing
       vars:
         BUNDLE_ID: com.nathanbyrne.workouttrackerapp
       flutter: stable
