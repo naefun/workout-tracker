@@ -10,6 +10,7 @@ workflows:
         - ios_signing
       vars:
         BUNDLE_ID: com.nathanbyrne.workouttrackerapp
+        APP_STORE_APPLE_ID: "6804228254"
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -36,7 +37,10 @@ workflows:
         script: xcode-project use-profiles
       - name: Flutter build ipa
         script: |
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID")
+          NEW_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
           flutter build ipa --release \
+            --build-number=$NEW_BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
