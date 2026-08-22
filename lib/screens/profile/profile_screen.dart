@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker_app/state/user_authentication_state.dart';
+import 'package:gym_tracker_app/util/color_utils.dart';
 import 'package:gym_tracker_app/util/privacy_policy.dart';
 import 'package:gym_tracker_app/widgets/card_button.dart';
 
@@ -97,11 +98,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             spacing: 12,
             children: [
               CardButton(
-                onTap: _openPrivacyPolicy,
-                label: 'Privacy Policy',
-                icon: Icons.privacy_tip_outlined,
-              ),
-              CardButton(
                 onTap: _isDeletingAccount ? () {} : _deleteAccount,
                 label:
                     _isDeletingAccount ? 'Deleting account…' : 'Delete Account',
@@ -123,7 +119,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ],
           ),
-        )
+        ),
+        TextButton(
+          onPressed: _openPrivacyPolicy,
+          child: Text(
+            'Privacy Policy',
+            style: TextStyle(color: primaryColour),
+          ),
+        ),
+        const SizedBox(height: 8),
       ],
     ));
   }
