@@ -6,7 +6,7 @@
     <title>Privacy Policy | Gym Tracker App</title>
     <meta
       name="description"
-      content="How Gym Tracker App handles account information, authentication data, and on-device workout records."
+      content="How Gym Tracker App handles account information, authentication data, and workout records stored with Supabase."
     />
     <link
       rel="canonical"
@@ -19,7 +19,7 @@
     <meta property="og:title" content="Gym Tracker App Privacy Policy" />
     <meta
       property="og:description"
-      content="Your workout records stay on your device."
+      content="Your workout records are stored securely with your signed-in account."
     />
     <meta
       property="og:url"
@@ -31,7 +31,7 @@
     />
     <meta
       property="og:image:alt"
-      content="Gym Tracker App Privacy Policy — Your workouts stay on your device."
+      content="Gym Tracker App Privacy Policy — Your workouts are stored with your signed-in account."
     />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
@@ -50,19 +50,18 @@
           <p class="kicker">Privacy policy</p>
           <h1 id="page-title">Your workouts are yours.</h1>
           <p class="hero-copy">
-            Gym Tracker App keeps your workout records on your device. We use
-            Apple or Google with Supabase only to sign you in and maintain your
-            account.
+            Gym Tracker App stores your workout records with Supabase and links
+            them to your signed-in account.
           </p>
-          <p class="updated">Last updated 24 July 2026</p>
+          <p class="updated">Last updated 25 July 2026</p>
 
           <div class="summary-grid" aria-label="Privacy at a glance">
             <div class="summary-card">
               <span class="summary-eyebrow">Workout records</span>
-              <strong>On your device</strong>
+              <strong>Stored with Supabase</strong>
               <p>
-                Exercise names, times, sets, reps, and weights are not uploaded
-                by the app.
+                Exercise names, times, sets, reps, and weights are linked to
+                your account.
               </p>
             </div>
             <div class="summary-card">
@@ -115,11 +114,11 @@
                 information when you use the app.
               </p>
               <p>
-                The app does not require you to upload workout information.
-                Account information is processed for sign-in, security, and
-                account administration. We do not sell personal information,
-                display advertising, or use personal information for cross-app
-                tracking.
+                The app stores workout information in Supabase so it is
+                available through your signed-in account. Account information
+                is processed for sign-in, security, and account administration.
+                We do not sell personal information, display advertising, or
+                use personal information for cross-app tracking.
               </p>
             </section>
 
@@ -183,18 +182,15 @@
 
             <section id="workout-data">
               <p class="section-number">03</p>
-              <h2>Workout data stays on your device</h2>
+              <h2>Workout data</h2>
               <p>
                 Workout start and end times, exercise names, set counts, reps,
-                and weights are saved in a database within the app’s local
-                storage. The app does not upload this workout information to
-                Supabase, Apple, Google, or a server operated by us.
+                and weights are stored in Supabase and linked to your account.
+                The app retrieves this information after you sign in.
               </p>
               <p>
-                Your operating system may include app data in a device backup,
-                depending on the backup settings you control. Those backups are
-                handled by your device and backup provider, not by Gym Tracker
-                App.
+                The app does not keep a local workout database or provide
+                offline workout storage.
               </p>
             </section>
 
@@ -204,6 +200,7 @@
               <ul>
                 <li>To authenticate you and maintain your signed-in session.</li>
                 <li>To show your first name within the app.</li>
+                <li>To save, retrieve, update, and delete workout records.</li>
                 <li>
                   To revoke linked sign-in authorization when you delete your
                   account.
@@ -251,8 +248,8 @@
                 <div>
                   <h3>Supabase</h3>
                   <p>
-                    Provides account, session, token, and authentication
-                    infrastructure.
+                    Provides account, session, token, authentication, and
+                    workout database infrastructure.
                   </p>
                   <a
                     href="https://supabase.com/privacy"
@@ -278,9 +275,8 @@
               <p class="section-number">06</p>
               <h2>Retention and deletion</h2>
               <p>
-                Workout information remains on your device until you delete
-                individual workouts, clear the app’s data, delete your account,
-                or uninstall the app, subject to any device backup you control.
+                Workout information is retained in Supabase while your account
+                remains active unless you delete an individual workout.
               </p>
               <p>
                 Supabase account and authentication information is retained
@@ -291,10 +287,9 @@
               <p>
                 You can delete your account from the Profile area of the app.
                 Account deletion removes your Supabase account and associated
-                authentication data, revokes or disconnects the linked sign-in
-                provider where supported, and deletes workout data held in the
-                app’s local database. Device backups that you control may retain
-                an older copy until the backup is replaced or deleted.
+                workout data, revokes or disconnects the linked sign-in provider
+                where supported, and removes associated authentication data
+                subject to necessary security, legal, and operational retention.
               </p>
               <p>
                 If account deletion does not complete, email
@@ -311,9 +306,8 @@
               <h2>Your choices and rights</h2>
               <p>
                 You can sign out or delete your account at any time from the
-                Profile area. You can delete saved workouts in the app and can
-                remove local data through your device settings or by
-                uninstalling the app.
+                Profile area. You can also delete individual saved workouts in
+                the app.
               </p>
               <p>
                 Depending on where you live, you may have rights to access,
