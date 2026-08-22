@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: codemagic_api_key
+      app_store_connect: Workouttracker-codemagic
     environment:
       ios_signing:
         distribution_type: app_store
