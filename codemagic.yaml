@@ -50,4 +50,4 @@ workflows:
       app_store_connect:
         auth: integration
         beta_groups:
-          - App Store Connect Users
+          - Dev team
