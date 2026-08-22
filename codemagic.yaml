@@ -49,5 +49,3 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        beta_groups:
-          - Dev team
