@@ -5,7 +5,6 @@ import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gym_tracker_app/state/current_tab_state.dart';
 import 'package:gym_tracker_app/state/current_workout_state.dart';
-import 'package:gym_tracker_app/state/database_state.dart';
 import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -52,6 +51,14 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       isSignedIn: isSignedIn ?? state.isSignedIn,
       firstName: firstName ?? state.firstName,
     );
+  }
+
+  Future<void> _completeSignIn({String? firstName}) async {
+    _setState(
+      isSignedIn: AuthStatus.signedIn,
+      firstName: firstName,
+    );
+    await ref.read(pastWorkoutsProvider.notifier).getWorkoutsFromRemote();
   }
 
   void _resetSignedOutState() {
@@ -134,13 +141,24 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
     }
   }
 
+  Future<void> _clearSessionAfterFailedSignIn() async {
+    try {
+      await _supabase.client.auth.signOut(scope: SignOutScope.local);
+    } catch (error, stackTrace) {
+      log(
+        'Failed to clear the Supabase session after an unsuccessful login.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   Future<void> restoreSession() async {
     final user = _supabase.client.auth.currentUser;
     if (user != null) {
       final fullName = (user.userMetadata?['full_name'] ??
           user.userMetadata?['name']) as String?;
-      _setState(
-        isSignedIn: AuthStatus.signedIn,
+      await _completeSignIn(
         firstName: fullName?.split(' ').first,
       );
       return;
@@ -150,51 +168,70 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
   }
 
   Future<void> signInWithGoogle({bool silentOnly = false}) async {
-    GoogleSignInAccount? googleUser;
-    if (silentOnly) {
-      googleUser = await _googleSignIn.attemptLightweightAuthentication();
-    }
-    if (googleUser == null && !silentOnly) {
-      try {
-        googleUser = await _googleSignIn.authenticate();
-      } catch (e) {
-        log(e.toString());
+    try {
+      GoogleSignInAccount? googleUser;
+      if (silentOnly) {
+        googleUser = await _googleSignIn.attemptLightweightAuthentication();
       }
-    }
+      if (googleUser == null && !silentOnly) {
+        googleUser = await _googleSignIn.authenticate();
+      }
 
-    if (googleUser == null) {
-      log('Failed to sign in with Google.');
-      _setState(isSignedIn: AuthStatus.signedOut);
-      return;
-    }
+      if (googleUser == null) {
+        _resetSignedOutState();
+        return;
+      }
 
-    final scopes = ['email', 'profile'];
+      final scopes = ['email', 'profile'];
 
-    final authorization =
-        await googleUser.authorizationClient.authorizationForScopes(scopes) ??
-            await googleUser.authorizationClient.authorizeScopes(scopes);
-    final idToken = googleUser.authentication.idToken;
-    if (idToken == null) {
-      throw Exception('No ID Token found.');
-    }
-    final response = await _supabase.client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: authorization.accessToken,
-    );
+      final authorization =
+          await googleUser.authorizationClient.authorizationForScopes(scopes) ??
+              await googleUser.authorizationClient.authorizeScopes(scopes);
+      final idToken = googleUser.authentication.idToken;
+      if (idToken == null) {
+        throw const AuthException('No ID token found.');
+      }
+      final response = await _supabase.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: authorization.accessToken,
+      );
 
-    if (response.session != null && response.user != null) {
+      if (response.session == null || response.user == null) {
+        throw const AuthException(
+          'Supabase did not return a session after Google login.',
+        );
+      }
+
       log('Successfully signed in with Google and authenticated with Supabase.');
-      _setState(
-          isSignedIn: AuthStatus.signedIn,
-          firstName: (response.user?.userMetadata?['name'] as String?)
-              ?.split(' ')
-              .first);
-      return;
-    } else {
-      log('Failed to authenticate with Supabase using Google credentials.');
-      _setState(isSignedIn: AuthStatus.signedOut);
-      return;
+      await _completeSignIn(
+        firstName:
+            (response.user?.userMetadata?['name'] as String?)?.split(' ').first,
+      );
+    } on GoogleSignInException catch (error, stackTrace) {
+      _resetSignedOutState();
+      if (error.code == GoogleSignInExceptionCode.canceled) {
+        return;
+      }
+
+      log(
+        'Google sign in failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!silentOnly) {
+        rethrow;
+      }
+    } catch (error, stackTrace) {
+      log(
+        'Google sign in failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _resetSignedOutState();
+      if (!silentOnly) {
+        rethrow;
+      }
     }
   }
 
@@ -224,9 +261,9 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       );
 
       if (response.session == null || response.user == null) {
-        log('Failed to authenticate with Supabase using Apple credentials.');
-        _setState(isSignedIn: AuthStatus.signedOut);
-        return;
+        throw const AuthException(
+          'Supabase did not return a session after Apple login.',
+        );
       }
 
       await _storeAppleDeletionCredential(credential.authorizationCode);
@@ -251,25 +288,29 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       }
 
       log('Successfully signed in with Apple and authenticated with Supabase.');
-      _setState(
-        isSignedIn: AuthStatus.signedIn,
+      await _completeSignIn(
         firstName: givenName ??
             (response.user?.userMetadata?['full_name'] as String?)
                 ?.split(' ')
                 .first,
       );
     } on SignInWithAppleAuthorizationException catch (error) {
-      if (error.code != AuthorizationErrorCode.canceled) {
-        log('Apple sign in failed: $error');
+      _resetSignedOutState();
+      if (error.code == AuthorizationErrorCode.canceled) {
+        return;
       }
-      _setState(isSignedIn: AuthStatus.signedOut);
-    } catch (error) {
-      log('Apple sign in failed: $error');
-      try {
-        await _supabase.client.auth.signOut(scope: SignOutScope.local);
-      } finally {
-        _resetSignedOutState();
-      }
+
+      log('Apple sign in failed.', error: error);
+      rethrow;
+    } catch (error, stackTrace) {
+      log(
+        'Apple sign in failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _clearSessionAfterFailedSignIn();
+      _resetSignedOutState();
+      rethrow;
     }
   }
 
@@ -301,16 +342,6 @@ class UserAuthenticationNotifier extends _$UserAuthenticationNotifier {
       await _deleteSupabaseAccount(requireAppleRevocation: false);
     }
     _logSuccessfulAccountDeletion(identityProviders);
-
-    try {
-      await ref.read(databaseProvider).database?.deleteAllUserData();
-    } catch (error, stackTrace) {
-      log(
-        'The Supabase account was deleted, but local data cleanup failed.',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
 
     if (hasGoogleIdentity) {
       await _deleteGoogleAccount();

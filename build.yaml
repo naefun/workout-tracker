@@ -1,7 +1,0 @@
-targets:
-  $default:
-    builders:
-      drift_dev:
-        options:
-          databases:
-            gym_tracker_app: lib/data/local_database.dart

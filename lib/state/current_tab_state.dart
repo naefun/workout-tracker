@@ -22,17 +22,6 @@ class CurrentTabNotifier extends _$CurrentTabNotifier {
     state = (currentTab: currentTab ?? state.currentTab);
   }
 
-  // Provide "true" for the values that should be reset
-  void _resetState({
-    bool currentTab = false,
-  }) {
-    state = (
-      currentTab: currentTab == true
-          ? initialCurrentTabStateData.currentTab
-          : state.currentTab,
-    );
-  }
-
   void setCurrentTab(TabItem tab) {
     _setState(currentTab: tab);
   }

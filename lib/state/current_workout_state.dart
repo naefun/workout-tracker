@@ -1,10 +1,10 @@
-import 'package:drift/drift.dart';
-import 'package:gym_tracker_app/data/local_database.dart';
+import 'dart:developer';
+
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
-import 'package:gym_tracker_app/state/database_state.dart';
 import 'package:gym_tracker_app/state/past_workouts_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'current_workout_state.g.dart';
 
@@ -30,6 +30,8 @@ const CurrentWorkoutStateData initialCurrentWorkoutStateData = (
 class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   @override
   CurrentWorkoutStateData build() => initialCurrentWorkoutStateData;
+
+  SupabaseClient get _client => Supabase.instance.client;
 
   Exercise _cloneExerciseWithSets(
       Exercise exercise, Map<int, ExerciseSet> sets) {
@@ -97,41 +99,71 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   void resetState() => state = initialCurrentWorkoutStateData;
 
   Future<void> startWorkout() async {
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
+    final user = _client.auth.currentUser;
+    if (user == null) {
       return;
     }
 
-    var startTime = DateTime.now();
-    var rowId = await database.into(database.databaseWorkouts).insert(
-        DatabaseWorkoutsCompanion.insert(
-            startTime: Value(startTime), createdAt: Value(startTime)));
+    try {
+      final startTime = DateTime.now();
+      final row = await _client
+          .from('workouts')
+          .insert({
+            'user_id': user.id,
+            'start_time': startTime.toUtc().toIso8601String(),
+            'created_at': startTime.toUtc().toIso8601String(),
+          })
+          .select('id')
+          .single();
+      final rowId = (row['id'] as num).toInt();
 
-    _setState(
-        isInProgress: true, workoutStartDateTime: startTime, workoutId: rowId);
+      _setState(
+        isInProgress: true,
+        workoutStartDateTime: startTime,
+        workoutId: rowId,
+      );
+    } catch (error, stackTrace) {
+      log(
+        'Failed to start the workout.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> endWorkout() async {
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
+    final user = _client.auth.currentUser;
+    final workoutId = state.workoutId;
+    if (user == null || workoutId == null) {
       return;
     }
 
-    DateTime endTime = DateTime.now();
+    try {
+      final endTime = DateTime.now();
 
-    if (state.exercises.isNotEmpty) {
-      await (database.update(database.databaseWorkouts)
-            ..where((val) => val.id.equals(state.workoutId!)))
-          .write(DatabaseWorkoutsCompanion(endTime: Value(endTime)));
-    } else {
-      await (database.delete(database.databaseWorkouts)
-            ..where((val) => val.id.equals(state.workoutId!)))
-          .go();
+      if (state.exercises.isNotEmpty) {
+        await _client
+            .from('workouts')
+            .update({'end_time': endTime.toUtc().toIso8601String()})
+            .eq('id', workoutId)
+            .eq('user_id', user.id);
+      } else {
+        await _client
+            .from('workouts')
+            .delete()
+            .eq('id', workoutId)
+            .eq('user_id', user.id);
+      }
+
+      resetState();
+      await ref.read(pastWorkoutsProvider.notifier).getWorkoutsFromRemote();
+    } catch (error, stackTrace) {
+      log(
+        'Failed to end the workout.',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
-
-    resetState();
-
-    ref.read(pastWorkoutsProvider.notifier).getWorkoutsFromLocalStorage();
   }
 
   Future<void> addExerciseToExerciseList(Exercise exercise) async {
@@ -139,40 +171,62 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
   }
 
   Future<void> startExercise(String name) async {
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
+    final workoutId = state.workoutId;
+    if (_client.auth.currentUser == null || workoutId == null) {
       return;
     }
-    var startTime = DateTime.now();
-    var rowId = await database.into(database.databaseExercises).insert(
-        DatabaseExercisesCompanion.insert(
-            startTime: Value(startTime),
-            workoutId: Value(state.workoutId),
-            name: Value(name)));
-    _setState(currentExercise: Exercise(name, {}, rowId, startTime));
+
+    try {
+      final startTime = DateTime.now();
+      final row = await _client
+          .from('exercises')
+          .insert({
+            'start_time': startTime.toUtc().toIso8601String(),
+            'workout_id': workoutId,
+            'name': name,
+          })
+          .select('id')
+          .single();
+      final rowId = (row['id'] as num).toInt();
+
+      _setState(currentExercise: Exercise(name, {}, rowId, startTime));
+    } catch (error, stackTrace) {
+      log(
+        'Failed to start the exercise.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> endExercise() async {
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
+    final currentExercise = state.currentExercise;
+    if (_client.auth.currentUser == null || currentExercise == null) {
       return;
     }
 
-    DateTime endTime = DateTime.now();
-    if (state.currentExercise != null &&
-        (state.currentExercise?.sets.length ?? 0) > 0) {
-      final exercise = state.currentExercise!..setEndTime(endTime);
-      _setState(exercises: [...state.exercises, exercise]);
-      await (database.update(database.databaseExercises)
-            ..where((val) => val.id.equals(state.currentExercise!.id)))
-          .write(DatabaseExercisesCompanion(endTime: Value(endTime)));
-    } else {
-      await (database.delete(database.databaseExercises)
-            ..where((val) => val.id.equals(state.currentExercise!.id)))
-          .go();
-    }
+    try {
+      final endTime = DateTime.now();
 
-    _resetState(currentExercise: true);
+      if (currentExercise.sets.isNotEmpty) {
+        await _client
+            .from('exercises')
+            .update({'end_time': endTime.toUtc().toIso8601String()}).eq(
+                'id', currentExercise.id);
+        currentExercise.setEndTime(endTime);
+        _setState(exercises: [...state.exercises, currentExercise]);
+      } else {
+        await _client.from('exercises').delete().eq('id', currentExercise.id);
+      }
+
+      _resetState(currentExercise: true);
+    } catch (error, stackTrace) {
+      log(
+        'Failed to end the exercise.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> addSetToCurrentExercise(String reps, String weight) async {
@@ -188,43 +242,64 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
       return;
     }
 
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
-      return;
-    }
-    var rowId = await database
-        .into(database.databaseExerciseSets)
-        .insert(DatabaseExerciseSetsCompanion.insert(
-          exerciseId: Value(exerciseId),
-          setNumber: Value(state.currentExercise?.sets.length ?? 0),
-          reps: Value(parsedReps),
-          weight: Value(parsedWeight),
-        ));
-
-    final currentExercise = state.currentExercise;
-    if (currentExercise == null) {
+    if (_client.auth.currentUser == null) {
       return;
     }
 
-    final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets);
-    updatedSets[rowId] = ExerciseSet(weight, reps, rowId);
+    try {
+      final row = await _client
+          .from('exercise_sets')
+          .insert({
+            'exercise_id': exerciseId,
+            'set_number': state.currentExercise?.sets.length ?? 0,
+            'reps': parsedReps,
+            'weight': parsedWeight,
+          })
+          .select('id')
+          .single();
+      final rowId = (row['id'] as num).toInt();
 
-    _setState(
-      currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
-    );
+      final currentExercise = state.currentExercise;
+      if (currentExercise == null) {
+        return;
+      }
+
+      final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets);
+      updatedSets[rowId] = ExerciseSet(weight, reps, rowId);
+
+      _setState(
+        currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
+      );
+    } catch (error, stackTrace) {
+      log(
+        'Failed to add the exercise set.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> removeSetFromCurrentExercise(int setId) async {
     final currentExercise = state.currentExercise;
-    if (currentExercise == null) {
+    if (_client.auth.currentUser == null || currentExercise == null) {
       return;
     }
 
-    final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets)
-      ..remove(setId);
+    try {
+      await _client.from('exercise_sets').delete().eq('id', setId);
 
-    _setState(
-      currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
-    );
+      final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets)
+        ..remove(setId);
+
+      _setState(
+        currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
+      );
+    } catch (error, stackTrace) {
+      log(
+        'Failed to remove the exercise set.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 }

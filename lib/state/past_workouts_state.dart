@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:gym_tracker_app/models/exercise.dart';
 import 'package:gym_tracker_app/models/exercise_set.dart';
-import 'package:gym_tracker_app/state/database_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'past_workouts_state.g.dart';
 
@@ -24,129 +24,154 @@ class PastWorkoutsNotifier extends _$PastWorkoutsNotifier {
     state = (workouts: workouts ?? state.workouts,);
   }
 
-  // Provide "true" for the values that should be reset
-  void _resetState({
-    bool workouts = false,
-  }) {
-    state = (
-      workouts: workouts == true
-          ? initialPastWorkoutsStateData.workouts
-          : state.workouts,
-    );
-  }
-
   void resetState() => state = initialPastWorkoutsStateData;
 
-  Future<void> getWorkoutsFromLocalStorage() async {
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
+  Future<void> getWorkoutsFromRemote() async {
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
+    if (user == null) {
+      resetState();
       return;
     }
 
     try {
-      // First get all workouts with their exercises and sets using joins
-      final results = await database.customSelect('''
-        SELECT 
-          w.id as workout_id, 
-          w.start_time as workout_start, 
-          w.end_time as workout_end,
-          e.id as exercise_id,
-          e.name as exercise_name,
-          e.start_time as exercise_start,
-          e.end_time as exercise_end,
-          s.id as set_id,
-          s.weight as set_weight,
-          s.reps as set_reps
-        FROM database_workouts w
-        LEFT JOIN database_exercises e ON e.workout_id = w.id
-        LEFT JOIN database_exercise_sets s ON s.exercise_id = e.id
-        ORDER BY w.start_time DESC, e.start_time ASC, s.id ASC
-        ''').get();
+      final workoutRows = await client
+          .from('workouts')
+          .select('id, start_time, end_time')
+          .eq('user_id', user.id)
+          .order('start_time', ascending: false);
+      final exerciseRows = await client
+          .from('exercises')
+          .select('id, workout_id, name, start_time, end_time')
+          .order('start_time');
+      final setRows = await client
+          .from('exercise_sets')
+          .select('id, exercise_id, weight, reps')
+          .order('id');
 
-      // Map to store workouts while building them
-      final Map<int, Workout> workouts = {};
-
-      // Iterate through results and build workout objects
-      for (final row in results) {
-        log('row: ${row.read<int>('workout_id')}');
-        final workoutId = row.readNullable<int>('workout_id');
-        final workoutStart = row.readNullable<DateTime>('workout_start');
-        final workoutEnd = row.readNullable<DateTime>('workout_end');
-
-        final exerciseId = row.readNullable<int>('exercise_id');
-        final exerciseName = row.readNullable<String>('exercise_name');
-        final exerciseStart = row.readNullable<DateTime>('exercise_start');
-        final exerciseEnd = row.readNullable<DateTime>('exercise_end');
-
-        final setId = row.readNullable<int>('set_id');
-        final setWeight = row.readNullable<String>('set_weight');
-        final setReps = row.readNullable<String>('set_reps');
-
-        // add workout
-        if (workoutId != null) {
-          if (!workouts.containsKey(workoutId)) {
-            workouts[workoutId] =
-                Workout(workoutId, workoutStart, workoutEnd, {});
-          }
-        } else {
-          continue;
-        }
-
-        // add exercise
-        if (exerciseId != null &&
-            exerciseName != null &&
-            exerciseStart != null &&
-            exerciseEnd != null) {
-          if (!workouts[workoutId]!.exercises.containsKey(exerciseId)) {
-            Exercise exercise = Exercise(
-              exerciseName,
-              {},
-              exerciseId,
-              exerciseStart,
-            );
-
-            exercise.setEndTime(exerciseEnd);
-
-            workouts[workoutId]!.addExercise(exercise);
-          }
-        } else {
-          continue;
-        }
-
-        // add set
-        if (setId != null && setWeight != null && setReps != null) {
-          if (!workouts[workoutId]!
-              .exercises[exerciseId]!
-              .sets
-              .containsKey(setId)) {
-            workouts[workoutId]!
-                .exercises[exerciseId]!
-                .addSet(ExerciseSet(setWeight, setReps, setId));
-          }
-        } else {
-          continue;
-        }
-      }
-      _setState(workouts: workouts.values.toList());
-    } catch (e) {
-      log('Error retrieving workouts: $e');
+      _setState(
+        workouts: mapWorkoutRows(
+          workoutRows: workoutRows,
+          exerciseRows: exerciseRows,
+          setRows: setRows,
+        ),
+      );
+    } catch (error, stackTrace) {
+      log(
+        'Failed to retrieve workouts from Supabase.',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   Future<void> deleteWorkout(int workoutId) async {
-    var database = ref.read(databaseProvider).database;
-    if (database == null) {
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
+    if (user == null) {
       return;
     }
-    var result = await (database.delete(database.databaseWorkouts)
-          ..where((val) => val.id.equals(workoutId)))
-        .go();
-    if (result > 0) {
-      final updatedWorkouts =
-          state.workouts.where((workout) => workout.id != workoutId).toList();
-      _setState(workouts: updatedWorkouts);
+
+    try {
+      final deletedRows = await client
+          .from('workouts')
+          .delete()
+          .eq('id', workoutId)
+          .eq('user_id', user.id)
+          .select('id');
+      if (deletedRows.isNotEmpty) {
+        final updatedWorkouts =
+            state.workouts.where((workout) => workout.id != workoutId).toList();
+        _setState(workouts: updatedWorkouts);
+      }
+    } catch (error, stackTrace) {
+      log(
+        'Failed to delete the workout.',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
+}
+
+List<Workout> mapWorkoutRows({
+  required List<Map<String, dynamic>> workoutRows,
+  required List<Map<String, dynamic>> exerciseRows,
+  required List<Map<String, dynamic>> setRows,
+}) {
+  final Map<int, Workout> workouts = {};
+
+  for (final row in workoutRows) {
+    final workoutId = (row['id'] as num).toInt();
+    workouts[workoutId] = Workout(
+      workoutId,
+      _parseDateTime(row['start_time']),
+      _parseDateTime(row['end_time']),
+      {},
+    );
+  }
+
+  final Map<int, Exercise> exercises = {};
+  for (final row in exerciseRows) {
+    final workoutId = (row['workout_id'] as num).toInt();
+    final workout = workouts[workoutId];
+    final exerciseName = row['name'] as String?;
+    final exerciseStart = _parseDateTime(row['start_time']);
+    final exerciseEnd = _parseDateTime(row['end_time']);
+    if (workout == null ||
+        exerciseName == null ||
+        exerciseStart == null ||
+        exerciseEnd == null) {
+      continue;
+    }
+
+    final exerciseId = (row['id'] as num).toInt();
+    final exercise = Exercise(
+      exerciseName,
+      {},
+      exerciseId,
+      exerciseStart,
+    )..setEndTime(exerciseEnd);
+    exercises[exerciseId] = exercise;
+    workout.addExercise(exercise);
+  }
+
+  for (final row in setRows) {
+    final exerciseId = (row['exercise_id'] as num).toInt();
+    final exercise = exercises[exerciseId];
+    final weight = row['weight'];
+    final reps = row['reps'];
+    if (exercise == null || weight == null || reps == null) {
+      continue;
+    }
+
+    final setId = (row['id'] as num).toInt();
+    exercise.addSet(
+      ExerciseSet(
+        _formatNumber(weight),
+        _formatNumber(reps),
+        setId,
+      ),
+    );
+  }
+
+  return workouts.values.toList();
+}
+
+DateTime? _parseDateTime(Object? value) {
+  if (value is! String) {
+    return null;
+  }
+
+  return DateTime.parse(value).toLocal();
+}
+
+String _formatNumber(Object value) {
+  if (value is num && value == value.roundToDouble()) {
+    return value.toInt().toString();
+  }
+
+  return value.toString();
 }
 
 class Workout {

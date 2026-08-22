@@ -42,7 +42,7 @@ final class CurrentTabNotifierProvider
 }
 
 String _$currentTabNotifierHash() =>
-    r'1f33353319cad953721ca6cbdae9fa931da53131';
+    r'c069d2a0d6341e12e5096ebb855f0a186d2f1bff';
 
 abstract class _$CurrentTabNotifier extends $Notifier<CurrentTabStateData> {
   CurrentTabStateData build();
