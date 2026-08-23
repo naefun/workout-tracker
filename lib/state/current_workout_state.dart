@@ -281,19 +281,50 @@ class CurrentWorkoutNotifier extends _$CurrentWorkoutNotifier {
 
   Future<void> removeSetFromCurrentExercise(int setId) async {
     final currentExercise = state.currentExercise;
-    if (_client.auth.currentUser == null || currentExercise == null) {
+    if (_client.auth.currentUser == null ||
+        !state.isInProgress ||
+        currentExercise == null ||
+        currentExercise.endTime != null ||
+        !currentExercise.sets.containsKey(setId)) {
       return;
     }
 
     try {
-      await _client.from('exercise_sets').delete().eq('id', setId);
+      final deletedRows = await _client
+          .from('exercise_sets')
+          .delete()
+          .eq('id', setId)
+          .eq('exercise_id', currentExercise.id)
+          .select('id');
 
-      final updatedSets = Map<int, ExerciseSet>.from(currentExercise.sets)
+      if (deletedRows.isEmpty) {
+        return;
+      }
+
+      final latestExercise = state.currentExercise;
+      if (!state.isInProgress ||
+          latestExercise == null ||
+          latestExercise.id != currentExercise.id ||
+          latestExercise.endTime != null) {
+        return;
+      }
+
+      final updatedSets = Map<int, ExerciseSet>.from(latestExercise.sets)
         ..remove(setId);
 
       _setState(
-        currentExercise: _cloneExerciseWithSets(currentExercise, updatedSets),
+        currentExercise: _cloneExerciseWithSets(latestExercise, updatedSets),
       );
+
+      var setNumber = 0;
+      for (final remainingSetId in updatedSets.keys) {
+        await _client
+            .from('exercise_sets')
+            .update({'set_number': setNumber})
+            .eq('id', remainingSetId)
+            .eq('exercise_id', currentExercise.id);
+        setNumber++;
+      }
     } catch (error, stackTrace) {
       log(
         'Failed to remove the exercise set.',
