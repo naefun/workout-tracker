@@ -118,60 +118,14 @@ class _CurrentWorkoutAreaState extends ConsumerState<CurrentWorkoutArea> {
                               ),
                             ),
                           )
-                        : Container(
-                            height: 167,
-                            width: 121,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Color(0xff2A343E),
-                            ),
-                            padding: const EdgeInsets.only(
-                                bottom: 16, top: 16, left: 6, right: 6),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  exerciseSet?.weight ?? '0',
-                                  style: TextStyle(
-                                      height: 0.78,
-                                      color: Color(0xff5B7182),
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  'KG',
-                                  style: TextStyle(
-                                      height: 1.16,
-                                      color: Color(0xff5B7182),
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.normal),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  exerciseSet?.reps ?? '0',
-                                  style: TextStyle(
-                                      color: Color(0xff5B7182),
-                                      height: 0.78,
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  'Reps',
-                                  style: TextStyle(
-                                      height: 1.16,
-                                      color: Color(0xff5B7182),
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.normal),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
+                        : CurrentExerciseSetCard(
+                            weight: exerciseSet!.weight,
+                            reps: exerciseSet.reps,
+                            onRemove: () {
+                              ref
+                                  .read(currentWorkoutProvider.notifier)
+                                  .removeSetFromCurrentExercise(exerciseSet.id);
+                            },
                           );
                   },
                   separatorBuilder: (BuildContext context, int index) {
@@ -275,6 +229,121 @@ class _CurrentWorkoutAreaState extends ConsumerState<CurrentWorkoutArea> {
           ),
         ]
       ],
+    );
+  }
+}
+
+enum _ExerciseSetAction { remove }
+
+class CurrentExerciseSetCard extends StatelessWidget {
+  const CurrentExerciseSetCard({
+    super.key,
+    required this.weight,
+    required this.reps,
+    required this.onRemove,
+  });
+
+  final String weight;
+  final String reps;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 167,
+      width: 121,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xff2A343E),
+      ),
+      padding: const EdgeInsets.only(
+        bottom: 16,
+        top: 16,
+        left: 6,
+        right: 6,
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  weight,
+                  style: const TextStyle(
+                    height: 0.78,
+                    color: Color(0xff5B7182),
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const Text(
+                  'KG',
+                  style: TextStyle(
+                    height: 1.16,
+                    color: Color(0xff5B7182),
+                    fontSize: 24,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  reps,
+                  style: const TextStyle(
+                    color: Color(0xff5B7182),
+                    height: 0.78,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const Text(
+                  'Reps',
+                  style: TextStyle(
+                    height: 1.16,
+                    color: Color(0xff5B7182),
+                    fontSize: 24,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: -16,
+            right: -6,
+            child: SizedBox(
+              height: 36,
+              width: 36,
+              child: PopupMenuButton<_ExerciseSetAction>(
+                tooltip: 'Set options',
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: Color(0xffB6E3FF),
+                  size: 20,
+                ),
+                onSelected: (action) {
+                  if (action == _ExerciseSetAction.remove) {
+                    onRemove();
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem<_ExerciseSetAction>(
+                    value: _ExerciseSetAction.remove,
+                    child: Text('Remove set'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
