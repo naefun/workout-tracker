@@ -2,7 +2,7 @@
 
 Last updated: 23 August 2026
 
-Public URL: <https://naefun.github.io/workout-tracker/>
+Public URL: <https://nathanbyrnecode.github.io/workout-tracker/>
 
 This Privacy Policy explains how FittenUp ("the app"), provided by Nathan Byrne ("we", "us", or "our"), handles information when you use the app.
 
