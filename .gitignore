@@ -33,6 +33,12 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Unsupported Flutter platforms
+/linux/
+/macos/
+/web/
+/windows/
+
 # Symbolication related
 app.*.symbols
 

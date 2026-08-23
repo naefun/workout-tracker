@@ -1,10 +1,10 @@
-# Gym Tracker App Privacy Policy
+# FittenUp Privacy Policy
 
-Last updated: 25 July 2026
+Last updated: 23 August 2026
 
 Public URL: <https://naefun.github.io/workout-tracker/>
 
-This Privacy Policy explains how Gym Tracker App ("the app"), provided by Nathan Byrne ("we", "us", or "our"), handles information when you use the app.
+This Privacy Policy explains how FittenUp ("the app"), provided by Nathan Byrne ("we", "us", or "our"), handles information when you use the app.
 
 The app stores workout information in Supabase so that it is available through your signed-in account. Account information is processed for sign-in, security, and account administration. We do not sell personal information, display advertising, or use personal information for cross-app tracking.
 
